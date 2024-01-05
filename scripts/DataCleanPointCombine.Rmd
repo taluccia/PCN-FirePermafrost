@@ -1,0 +1,989 @@
+---
+title: "Data Clean to Point & Combine"
+author: "Anna Talucci"
+date: "2023-09-21"
+output: html_document
+---
+
+
+
+# clear environment
+```{r}
+rm(list=ls())
+```
+
+# Overview
+
+This script was adapt script form M. Loranty data_cleaning, to only clean and not aggregate data. The csv files are downloaded from the Google Drive sheets that were populated by the data contributor.
+
+**What this script does**
+This script takes each data contribution and checks abnormalities and formatting issues. It fixes any issues. Data is then combines into a single data frame and converted in to a spatial data set and saved as a shapefile and csv file. 
+
+# Packages
+
+```{r}
+library(tidyverse)
+library(lubridate)
+library(sf)
+```
+
+# Projection
+
+WGS 84 need for gee
+```{r}
+wgs_proj =  "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs "
+```
+
+# Data
+
+## vector of data files
+original data in "../data/GoogleDriveCsvFolder/"
+```{r}
+f <- list.files(path = "../data/GoogleDriveCsv2/",
+                pattern = "*.csv", full.names = TRUE)
+```
+
+```{r}
+f
+```
+
+
+# Clean by contributor
+## 1. Baillargeon
+```{r}
+f1 <- read.csv(f[1], header = TRUE) 
+```
+
+```{r}
+f1
+```
+```{r}
+# change organic depth range to numeric
+f1$organic_depth <- 25
+
+# indicate measurements that exceed probe length
+f1$gt_probe[which(f1$thaw_depth == "100+")] <- "y"
+
+# get rid of non-numeric thaw probe measurements
+f1$thaw_depth <- as.numeric(sub("100+", "100", f1$thaw_depth, fixed = TRUE))
+
+# get rid of non-numeric fire year entries
+f1$fire_year <- as.numeric(sub("unburned", NA, f1$fire_year, fixed = TRUE))
+
+# fix slope, which was read as logical
+f1$slope <- read.csv(f[1], header = TRUE, colClasses = "character")[,20]
+
+# fix thaw_active - these are TD measurements, not ALD
+f1$thaw_active <- "T"
+```
+
+```{r}
+unique(f1$veg_cover_class)
+```
+
+```{r}
+# examine unique combinations of identify information for aggregatation
+f1 %>% distinct(site_id,year,month,day,fire_id,burn_unburn)
+str(f1)
+```
+
+```{r}
+# Add date 
+(
+  f1_dates = f1 %>%
+  mutate(date = as.Date(with(., paste(year, month, day,sep="-")), "%Y-%m-%d")) %>%
+  mutate(julianDate = yday(date)) %>%
+  mutate(paired = ifelse(site_id == 'a', "a1",
+                  ifelse(site_id == 'b', "a2",
+                  ifelse(site_id == 'c', "a3",
+                  ifelse(site_id == 'd', "a4",
+                  ifelse(site_id == 'e', "a5",
+                  ifelse(site_id == 'f', "a6", "a7")))))))
+)
+```
+
+
+```{r}
+# distinct site pairs
+f1_dates %>% distinct(site_id, plot_id, fire_id, burn_unburn) 
+f1_dates %>% distinct(julianDate, year, date)
+```
+
+## 2. Breen
+```{r}
+f2 <- read.csv(f[2], header = TRUE)
+f2
+```
+```{r}
+str(f2)
+unique(f2$year)
+```
+
+```{r}
+# Create single fire year
+( f2_dates = f2 %>%
+  mutate(fire_year = pmax(fire_year_1 , fire_year_2, fire_year_3, na.rm = TRUE)) %>%
+  mutate(reburn = paste(fire_year_1 , fire_year_2, fire_year_3, sep = ', ')) %>%
+    mutate(fire_id = paste(fire_id1 , fire_id2, fire_id3, sep = ', ')) %>%
+  dplyr::select(last_name:day, burn_unburn:reburn, fire_id) %>%
+  mutate(date = as.Date(with(., paste(year, month, day,sep="-")), "%Y-%m-%d")) %>%
+  mutate(julianDate = yday(date)) %>%
+    mutate(fire_id = gsub("\\,,*", "", fire_id)) %>%
+    drop_na(lat)  %>%
+  mutate(paired = "b1")
+)
+```
+
+```{r}
+# Look at distinct identifiers
+f2_dates %>% distinct(site_id, plot_id, burn_unburn) 
+f2_dates %>% distinct(julianDate, year, date)
+```
+
+## 3. Buma
+
+```{r}
+# read without 17th column, which is redundant to the gt_prob column
+f3 <- read.csv(f[3], header = TRUE)
+f3
+```
+
+```{r}
+# fix thaw/active column, which was read as logical
+f3$thaw_active <- read.csv(f[3], header = TRUE, colClasses = "character")[,20]
+
+# fix site_id for aggregating (see Note below from Buma)
+f3$site_id <- paste(f3$site_id, sapply(strsplit(f3$plot,"_"),"[[",2), sep="_" )
+
+#fix positive longitude values, which are in the wrong hemisphere
+f3$long <- ifelse(f3$long > 0, -f3$long,f3$long)
+```
+NOTE---The Dalton and the Steese are larger "sites," each of which has a lot of plots in them.  But those plots do vary, so don't aggregate.  At the Dalton, there are sites with 0 (unburned), 1 (one fire, which would be 2004/2005 era), 2 fires (which would be 1970's era AND 2004 or 2005), or 3 fires (which would be 1950's, 1970's, and 2004 or 2005.  So if aggregating, what you'd want to do would be to aggregate by those treatments (0, 1, 2, or 3 fires) within the Dalton or Steese "sites."  So, sounds like you'd want to aggregate all the unburned plots at the Dalton, all the 1 burn plots at the Dalton, etc.  I would not aggregate Dalton and Steese plots together, they are functionally different sites (uplands vs. low lands, respectively).
+
+```{r}
+f3
+str(f3)
+```
+
+```{r}
+( f3_dates = f3 %>%
+    dplyr::select(-HIT) %>%
+  mutate(date = as.Date(with(., paste(year, month, day,sep="-")), "%Y-%m-%d")) %>%
+  mutate(julianDate = yday(date))  %>%
+  mutate(paired = ifelse(site_id %in% c('DALTON_1', 'DALTON_2', 'DALTON_3', 'DALTON_0'), "c1", 'NA'))
+)
+```
+
+```{r}
+f3_dates %>% distinct(site_id, burn_unburn) 
+f3_dates %>% distinct(site_id, plot_id, fire_id, burn_unburn) 
+f3_dates %>% distinct(julianDate, year, date)
+```
+## 4. Diaz-Veraverbeke
+
+```{r}
+f4 <- read.csv(f[4], header = TRUE)
+f4
+```
+```{r}
+str(f4)
+```
+
+```{r}
+# fix incorrect logical columns
+f4$thaw_active <- read.csv(f[4], header = TRUE, colClasses = "character")[,20]
+```
+
+```{r}
+f4 %>% dplyr::select(plot_id, pairUnb) %>% group_by(pairUnb) %>% 
+       arrange(., desc(pairUnb))
+```
+```{r}
+(
+  f4_dates = f4 %>%
+  mutate(date = as.Date(with(., paste(year, month, day,sep="-")), "%Y-%m-%d")) %>%
+  mutate(julianDate = yday(date)) %>%
+  drop_na((lat))  %>%
+  mutate(paired = ifelse(plot_id %in% c('23EF07B', '23EF12B', '23EF22B', '23EF23B', '23EF27C'), "d1",
+                  ifelse(plot_id %in% c('23EF05B', '23EF10B',	'23EF14C'), "d2",
+                  ifelse(plot_id %in% c('23EF08B', '23EF11B', '23EF15B', '23EF19B', '23EF26B', '23EF28B', '23EF13C'), "d3",
+                  ifelse(plot_id %in% c('23EF04B', '23EF17B', '23EF09C'), "d4",
+                  ifelse(plot_id %in% c('23EF01B', '23EF03B', '23EF06B', '23EF16B', '23EF18B', '23EF20B', '23EF21B', '23EF24B', '23EF25B', '23EF29B', '23EF02C'), "d5",
+                  ifelse(plot_id %in% c('23AP36B', '23AP37B', '23AP38B', '23AP42B', '23AP45B', '23AP44C'), "d6", 
+                ifelse(plot_id %in% c('23AP34B', '23AP40B', '23AP41B', '23AP35C'), "d7", "d8"))))))))
+)
+```
+
+```{r}
+f4_dates %>% distinct(site_id, plot_id, fire_id, burn_unburn) 
+f4_dates %>% distinct(julianDate, year, date)
+```
+## 5. Dielman
+```{r}
+f5 <- read.csv(f[5], header = TRUE)
+f5
+```
+### fix incorrect logical columns
+```{r}
+f5[,c(11,18,20,21)] <- read.csv(f[5], header = TRUE, colClasses = "character")[,c(11,18,20,21)]
+```
+
+```{r}
+f5 %>% distinct(site_id,year,month,day,fire_id,burn_unburn)
+```
+
+```{r}
+str(f5)
+```
+
+```{r}
+unique(f5$site_id)
+```
+
+```{r}
+f5 %>% group_by(thaw_active, site_id) %>% count(.)
+f5 %>% filter(thaw_active == "T")
+f5 %>% filter(thaw_active == "A")
+```
+
+```{r}
+(
+  f5_dates = f5 %>%
+  mutate(date = as.Date(with(., paste(year, month, day,sep="-")), "%Y-%m-%d")) %>%
+  mutate(julianDate = yday(date)) %>%
+  mutate(paired = ifelse(plot_id %in% c('CG1-15', 'CG1-157', 'CG1-18', 'CG1-25', 'CG1-6', 'CG1-8', 'F1-12', 'F1-22', 'F1-25', 'F1-31', 'F1-47'), "e1",
+                  ifelse(plot_id %in% c('C1-14', 'C1-17', 'C1-19', 'C1-32', 'C1-8', 'F11-1', 'F11-10', 'F11-15', 'F11-19'), "e2",
+                  ifelse(plot_id %in% c('F13-11', 'F13-5', 'C5-4'), "e3",
+                  ifelse(plot_id %in% c('C7-18', 'C7-5', 'C7-9', 'C8-4', 'C9-1', 'C9-5', 'C9-9', 'F15-13', 'F15-16', 'F15-9', 'F17-5'), "e4",
+                  ifelse(plot_id %in% c('CG3-12', 'CG3-30', 'CG3-31', 'CG3-4', 'CG3-40', 'F3-19', 'F3-3','F3-8'), "e5",
+                  ifelse(plot_id %in% c('CG2-20', 'CG2-5', 'F4-1', 'F4-31', 'ZF46-1', 'ZF46-15', 'ZF46-15', 'ZF46-18', 'ZF46-21'), "e6",
+                  ifelse(plot_id %in% c('SS33-1', 'SS33-11', 'SS33-21', 'SS33-25', 'SS33-26', 'SS33-27', 'SS33-3', 'SS33-582', 'SS33-6', 'SS33-877', 'SS33-9', 'KAK-UB-1'), "e7", 
+                  ifelse(plot_id %in% c('ZF20-10', 'ZF20-11', 'ZF20-12', 'ZF20-125', 'ZF20-4', 'ZF20-40', 'ZF20-43', 'ZF20-6', 'ZF20-8', 'ZF20-9', 'ZF20-9', 'HWY3-UB-1'), "e8",
+                ifelse(plot_id %in% c('ZF26-104', 'ZF26-112', 'ZF26-113', 'ZF26-118', 'ZF26-5', 'ZF26-50', 'ZF26-6', 'ZF26-66', 'ZF26-7', 'ZF26-96', 'ZF26-98', 'WEK-UB-1'), "e9", "NA"))))))))))
+)
+```
+
+```{r}
+f5_dates %>% distinct(site_id, plot_id, fire_id, burn_unburn) 
+f5_dates %>% distinct(julianDate, year, date)
+```
+
+## 6. Douglas
+```{r}
+f6 <- read.csv(f[6], header = TRUE)
+f6
+```
+```{r}
+str(f6)
+```
+
+```{r}
+## fix incorrect logical columns
+f6$slope <- read.csv(f[6], header = TRUE, colClasses = "character")[,20]
+```
+
+```{r}
+f6_dates = f6 %>%
+  mutate(date = as.Date(with(., paste(year, month, day,sep="-")), "%Y-%m-%d")) %>%
+  mutate(julianDate = yday(date)) %>%
+  dplyr::select(-notes)  %>%
+  mutate(paired = "f1")
+
+f6_dates
+```
+
+
+```{r}
+f6_dates %>% distinct(site_id, plot_id, fire_id, burn_unburn) 
+f6_dates %>% distinct(julianDate, year, date)
+```
+
+
+## 7. Frost
+```{r}
+f7 <- read.csv(f[7], header = TRUE)
+f7
+```
+```{r}
+str(f7)
+```
+
+```{r}
+f7$thaw_active <- read.csv(f[7], header = TRUE, colClasses = "character")[,19]
+```
+
+```{r}
+unique(f7$site_id)
+f7 %>% group_by(thaw_active, site_id) %>% count(.)
+f7 %>% filter(thaw_active == "T")
+```
+
+```{r}
+( 
+f7_dates = f7 %>%
+  mutate(date = as.Date(with(., paste(year, month, day,sep="-")), "%Y-%m-%d")) %>%
+  mutate(julianDate = yday(date)) %>%
+  mutate(paired = "g1")
+)
+```
+
+
+```{r}
+f7_dates %>% distinct(site_id, plot_id, fire_id, burn_unburn) 
+f7_dates %>% distinct(julianDate, year, date)
+```
+
+## 8. Gaglioti
+
+```{r}
+f8 <- read.csv(f[8], header = TRUE)
+f8
+```
+
+```{r}
+# set gt_probe
+f8$gt_probe <- "n"
+
+# organic depth is missing, but set to NA
+f8$organic_depth <- as.numeric(f8$organic_depth)
+```
+
+```{r}
+str(f8)
+```
+
+```{r}
+(
+  f8_dates = f8 %>%
+  mutate(date = as.Date(with(., paste(year, month, day,sep="-")), "%Y-%m-%d")) %>%
+  mutate(julianDate = yday(date)) %>%
+  dplyr::select(-Notes) %>%
+  mutate(paired = "h1")
+)
+```
+
+```{r}
+f8_dates %>% distinct(site_id, plot_id, fire_id, burn_unburn) 
+f8_dates %>% distinct(julianDate, year, date)
+```
+
+## 9. Holloway
+```{r}
+f9 <- read.csv(f[9], header = TRUE) 
+f9
+```
+
+```{r}
+# View data
+glimpse(f9)
+```
+
+```{r}
+# check thaw_active and slope
+unique(f9$thaw_active)
+unique(f9$slope)
+```
+
+```{r}
+# Check gt_probe yes
+gtProbeYes = filter(f9, gt_probe=="y")
+unique(gtProbeYes$thaw_depth)
+```
+
+```{r}
+# Fixes 
+f9 = f9 %>%
+     mutate(thaw_active=replace(thaw_active, thaw_active==TRUE, 'thaw')) %>% # switch true to thaw
+     as.data.frame() %>%
+  mutate(slope=replace(slope, slope==FALSE, 'flat')) %>% # switch false to flat
+     as.data.frame() %>%
+  mutate(gt_probe=replace(gt_probe, thaw_depth==87, "n")) %>%
+     as.data.frame() %>%
+  mutate(gt_probe=replace(gt_probe, thaw_depth %in% c("110+", "125+", "120+", "180+", "195+"), "y")) %>%
+     as.data.frame() %>%
+  mutate(thaw_depth = gsub("\\+","", thaw_depth)) %>%
+  mutate(thaw_depth = as.numeric(thaw_depth)) %>%
+  mutate(paired = ifelse(site_id %in% c('b14', 'b9', 'b12', 'b13', 'b15', 'b16', 'ub3'), "i1", "i2"))
+```
+
+```{r}
+f9
+# examine unique combinations of identify information for aggregatation
+f9 %>% distinct(site_id,year,month,day,fire_id,burn_unburn)
+str(f9)
+```
+
+```{r}
+(
+  f9_dates = f9 %>%
+  mutate(date = as.Date(with(., paste(year, month, day,sep="-")), "%Y-%m-%d")) %>%
+  mutate(julianDate = yday(date)) 
+)
+```
+
+```{r}
+f9_dates %>% distinct(site_id, plot_id, fire_id, burn_unburn, pairUnb) 
+f9_dates %>% distinct(julianDate, year, date)
+```
+
+## 10. Loranty
+```{r}
+f10 <- read.csv(f[10], header = TRUE)
+f10
+```
+```{r}
+str(f10)
+glimpse(f10)
+```
+
+
+
+
+```{r}
+f10_dates = f10 %>%
+  mutate(date = as.Date(with(., paste(year, month, day,sep="-")), "%Y-%m-%d")) %>%
+  mutate(julianDate = yday(date)) %>%
+  dplyr::select(-notes) %>%
+  mutate(paired = "j1")
+
+f10_dates
+```
+
+
+## 11. Manies
+```{r}
+f11 <- read.csv(f[11], header = TRUE)
+f11
+```
+```{r}
+str(f11)
+```
+
+
+```{r}
+# Fixes 
+f11 = f11 %>%
+   mutate(thaw_active=replace(thaw_active, thaw_active==TRUE, 'thaw')) %>% # switch true to thaw
+     as.data.frame() %>%
+  mutate(slope=replace(slope, slope==FALSE, 'flat')) %>% # switch false to flat
+     as.data.frame() %>%
+  mutate(organic_depth = (na.strings = "unk")) %>%
+     as.data.frame() 
+```
+
+```{r}
+f11_dates = f11 %>%
+  mutate(date = as.Date(with(., paste(year, month, day,sep="-")), "%Y-%m-%d")) %>%
+  mutate(julianDate = yday(date)) %>%
+  dplyr::select(-notes) %>%
+  mutate(paired = "k1")
+
+f11_dates
+```
+
+```{r}
+f11_dates %>% distinct(site_id, plot_id, fire_id, burn_unburn) 
+f11_dates %>% distinct(site_id, thaw_active, julianDate, year, date)
+```
+
+## 12. Natali
+```{r}
+f12 <- read.csv(f[12], header = TRUE)
+f12
+```
+
+
+```{r}
+# fix incorrect logical columns
+# organic depth is missing, but set to NA
+f12$organic_depth <- as.numeric(f12$organic_depth)
+
+# fix incorrect logical columns
+f12[,c(20:22)] <- read.csv(f[12], header = TRUE, colClasses = "character")[,c(20:22)]
+
+# remove characters from thaw depth and convert to numeric
+f12$thaw_depth <- gsub("+", "", f12$thaw_depth, fixed = TRUE)
+f12$thaw_depth <- as.numeric(gsub(">", "", f12$thaw_depth, fixed = TRUE))
+f12$long = as.numeric(gsub(",","",f12$long))
+#fix positive longitude values, which are in the wrong hemisphere
+f12$long <- ifelse(f12$long > 0, -f3$long,f3$long)
+```
+
+```{r}
+str(f12)
+```
+
+```{r}
+(
+  f12_dates = f12 %>%
+  mutate(date = as.Date(with(., paste(year, month, day,sep="-")), "%Y-%m-%d")) %>%
+  mutate(julianDate = yday(date)) %>%
+  mutate(paired = ifelse(site_id %in% c('ANKB', 'ANKU'), "l1",
+                  ifelse(site_id %in% c('BCB', 'BCU'), "l2",
+                  ifelse(site_id %in% c('HCB', 'HCU'), "l3",
+                  ifelse(site_id %in% c('NCB_OLD', 'NCB_NEW'), "l4",
+                  ifelse(site_id %in% c('YKDB', 'YKDU'), "l5", "l6")))))) %>%
+    drop_na(lat, long)
+)
+```
+7,736 all data | NA in Lat/lon removed 7,712
+
+```{r}
+f12_dates[is.na(f12_dates$lat),]
+f12_dates[is.na(f12_dates$long),]
+```
+```{r}
+unique(f12_dates$site_id)
+f12_dates %>% group_by(thaw_active, site_id) %>% count(.)
+f12_dates %>% filter(thaw_active == "T")
+f12_dates %>% distinct(site_id, plot_id, fire_id, burn_unburn) 
+f12_dates %>% filter(site_id =="YKD")
+f12_dates %>% distinct(julianDate, year, date)
+f12_dates %>% filter_all(any_vars(is.na(.))) 
+```
+
+## 13. O'Donnell
+```{r}
+f13 <- read.csv(f[13], header = TRUE)
+f13
+```
+```{r}
+str(f13)
+```
+
+```{r}
+# fix incorrect logical columns
+f13$organic_depth <- as.numeric(gsub(">", "",f13$organic_depth))
+
+f13$thaw_depth <- as.numeric(gsub(">", "",f13$thaw_depth))
+
+f13 %>% distinct(site_id,year,month,day,fire_id,burn_unburn)
+```
+
+```{r}
+( 
+  f13_dates = f13 %>%
+  mutate(date = as.Date(with(., paste(year, month, day,sep="-")), "%Y-%m-%d")) %>%
+  mutate(julianDate = yday(date)) %>%
+  mutate(paired = ifelse(site_id %in% c('ECLB', 'ECLC'), "m1",
+                  ifelse(site_id %in% c('ECHB',	'ECHC'), "m2",
+                  ifelse(site_id %in% c('HC03', 'HC93', 'HC90', 'HC67', 'HCCN'), "m3",
+                  ifelse(site_id %in% c('THNO', 'THNY', 'THNN', 'THNM'), "m4", "m5")))))
+)
+```
+
+```{r}
+f13 %>% distinct(site_id, plot_id, fire_id, burn_unburn) 
+f13_dates %>% distinct(julianDate, year, date)
+f13_dates %>% distinct(site_id, thaw_active, julianDate, year, date)
+```
+
+## 14. Olefeldt
+```{r}
+f14 <- read.csv(f[14], header = TRUE)
+f14
+```
+
+```{r}
+# fix incorrect logical columns
+f14$slope <- read.csv(f[14], header = TRUE, colClasses = "character")[,20]
+
+# remove non-numeric characters from numeric vars
+# note we're loosing info on where Organic Layer Thickness is in excess of the entered value
+f14$organic_depth <- as.numeric(gsub(">", "",f14$organic_depth))
+
+f14 %>% distinct(site_id,year,month,day,fire_id,burn_unburn)
+```
+
+```{r}
+str(f14)
+```
+
+```{r}
+(
+  f14_dates = f14 %>%
+  mutate(date = as.Date(with(., paste(year, month, day,sep="-")), "%Y-%m-%d")) %>%
+  mutate(julianDate = yday(date)) %>%
+  mutate(paired = ifelse(site_id %in% c('camsell_1975', 'camsell_unburn'), "n1",
+                  ifelse(site_id %in% c('fortsimpson_1995',	'fortsimpson_2006', 'fortsimpson_unburn'), "n2",
+                  ifelse(site_id %in% c('kakisa_2014', 'kakisa_unburn'), "n3",
+                  ifelse(site_id %in% c('lutose_2000', 'lutose_2012', 'lutose_2019', 'lutose_unburn'), "n4",
+                  ifelse(site_id %in% c('samba_1967', 'samba_2013', 'samba_unburn'), "n5",
+                  ifelse(site_id %in% c('scotty_2014', 'scotty_unburn'), "n6", "n7"))))))) #%>%
+  #dplyr::select(-fire_id)
+)
+```
+
+```{r}
+f14_dates %>% filter_all(any_vars(is.na(.))) 
+f14_dates %>% distinct(site_id, plot_id, burn_unburn) 
+f14_dates %>% distinct(julianDate, year, date)
+```
+
+## 15. Paulson
+```{r}
+f15 <- read.csv(f[15], header = TRUE)
+f15
+```
+
+```{r}
+# fix incorrect logical columns
+f15$thaw_active <- read.csv(f[15], header = TRUE, colClasses = "character")[,19]
+
+f15 %>% distinct(site_id,year,month,day,fire_id,burn_unburn)
+```
+
+```{r}
+str(f15)
+``` 
+
+```{r}
+( 
+  f15_dates = f15 %>%
+  mutate(date = as.Date(with(., paste(year, month, day,sep="-")), "%Y-%m-%d")) %>%
+  mutate(julianDate = yday(date)) %>%
+  dplyr::select(-notes) %>%
+  mutate(paired = ifelse(site_id %in% c('alnus'), "o1",
+                  ifelse(site_id %in% c('ans'), "o2",
+                  ifelse(site_id %in% c('bp'), "o3",
+                  ifelse(site_id %in% c('cn'), "o4",
+                  ifelse(site_id %in% c('foc'), "o5",
+                  ifelse(site_id %in% c('fn'), "o6",
+                  ifelse(site_id %in% c('gonzo'), "o7",
+                  ifelse(site_id %in% c('hr'), "o8",
+                  ifelse(site_id %in% c('shark'), "o9",
+                  ifelse(site_id %in% c('frk'), "o10",
+                  ifelse(site_id %in% c('maya'), "o11",
+                  ifelse(site_id %in% c('korova'), "o12", "o13")))))))))))))
+)
+```
+
+```{r}
+f15_dates %>% distinct(site_id, plot_id, fire_id, burn_unburn) 
+f15_dates %>% distinct(julianDate, year, date)
+```
+
+## 16. Rocha
+```{r}
+f16 <- read.csv(f[16], header = TRUE)
+f16
+```
+
+```{r}
+# fix incorrect logical columns
+f16$slope <- read.csv(f[16], header = TRUE, colClasses = "character")[,20]
+# organic depth is missing, but set to NA
+f16$organic_depth <- as.numeric(f16$organic_depth)
+# convert thaw depth to numeric - blank cells have a period, and will be converted to NA
+f16$thaw_depth <- as.numeric(f16$thaw_depth)
+```
+
+```{r}
+str(f16)
+```
+
+```{r}
+(
+  f16_dates = f16 %>%
+  mutate(date = as.Date(with(., paste(year, month, day,sep="-")), "%Y-%m-%d")) %>%
+  mutate(julianDate = yday(date)) %>%
+  dplyr::select(-notes) %>%
+  mutate(paired = ifelse(site_id %in% c('ARF Severe', 'ARF Moderate', 'ARF Unburned'), "p1",
+                  ifelse(site_id %in% c('Kuparuk Burned',	'Kuparuk Unburned'), "p2",
+                  ifelse(site_id %in% c('DCKN Burned', 'DCKUN Unburned'), "p3",
+                  ifelse(site_id %in% c('Kokolik Burned',	'Kokolik Unburned'), "p4",
+                  ifelse(site_id %in% c('Jones Old Burn', 'Jones Old Burn'), "p5", "p6"))))))
+)
+```
+
+```{r}
+f16_dates %>% distinct(site_id, plot_id, fire_id, burn_unburn) 
+f16_dates %>% distinct(julianDate, year, date)
+```
+
+## 17. Sizov
+```{r}
+f17 <- read.csv(f[17], header = TRUE)
+f17
+```
+```{r}
+str(f17)
+```
+
+```{r}
+(
+  f17_dates = f17 %>%
+  mutate(date = as.Date(with(., paste(year, month, day,sep="-")), "%Y-%m-%d")) %>%
+  mutate(julianDate = yday(date)) %>%
+  dplyr::select(-notes) %>%
+    mutate(paired = "q1")
+  )
+```
+
+```{r}
+f17_dates %>% distinct(site_id, plot_id, fire_id, burn_unburn) 
+f17_dates %>% distinct(julianDate, year, date)
+```
+
+## 18. Veraverbeke
+```{r}
+f18 <- read.csv(f[18], header = TRUE)
+f18
+```
+```{r}
+str(f18)
+```
+
+```{r}
+# fix incorrect logical columns
+f18$thaw_active <- read.csv(f[18], header = TRUE, colClasses = "character")[,19]
+```
+
+```{r}
+(
+  f18_dates = f18 %>%
+  mutate(date = as.Date(with(., paste(year, month, day,sep="-")), "%Y-%m-%d")) %>%
+  mutate(julianDate = yday(date)) %>%
+  drop_na((lat))  %>%
+  mutate(paired = ifelse(plot_id %in% c('YE001B', 'YE016C'), "r1",
+                  ifelse(plot_id %in% c('YE002B',	'YE017C'), "r2",
+                  ifelse(plot_id %in% c('YE003B', 'YE014C'), "r3",
+                  ifelse(plot_id %in% c('YE014C',	'YE022C'), "r4",
+                  ifelse(plot_id %in% c('YE006B', 'YE007B',	'YE013C'), "r5",
+                  ifelse(plot_id %in% c('YE009B', 'YE010B', 'YE011B', 'YE012B', 'YE016C'), "r6", "r7")))))))
+)
+```
+
+```{r}
+f18_dates %>% distinct(site_id, plot_id, fire_id, burn_unburn) 
+f18_dates %>% distinct(julianDate, year, date)
+```
+
+
+# Match Data structure across dataframes 
+
+# Function to clean
+```{r}
+clean <- function(df){ df %>%
+  mutate(across(c(plot_id, site_id, fire_id), as.character)) %>% 
+  mutate(across(c(fire_year, organic_depth, slope, day), as.numeric)) %>% 
+    mutate(across(c(fire_year, organic_depth, slope, day), ~replace(., is.na(.), -9999))) %>%
+    mutate(across(day, ~coalesce(., 0))) %>%
+  rename(plotId = plot_id,
+         siteId = site_id, 
+         biome=boreal_tundra,
+         distur = burn_unburn,
+         cntryId = country_code, 
+         fireYr = fire_year,
+         gtProbe = gt_probe,
+         hitRock = hit_rock,
+         lastNm = last_name, 
+         lon=long, 
+         vegCvr = veg_cover_class,  
+         fireId = fire_id,  
+         orgDpth = organic_depth, 
+         msrDepth = thaw_depth,   
+         msrType = thaw_active, 
+         topoPos = topo_position, 
+         msrDOY = julianDate,
+         srfH2O = surface_water) %>%
+    mutate(msrType = as.character(msrType)) %>%
+    dplyr::select(plotId, siteId, cntryId, lastNm, lat, lon, year, month, day, biome, distur, fireYr, paired, gtProbe, hitRock, orgDpth, srfH2O, topoPos, slope, vegCvr, msrDOY, msrType, msrDepth)
+}
+
+```
+
+
+## Apply functions
+```{r}
+f1_clean = clean(f1_dates)
+f2_clean = clean(f2_dates)
+f3_clean = clean(f3_dates)
+f4_clean = clean(f4_dates)
+f5_clean = clean(f5_dates)
+f6_clean = clean(f6_dates)
+f7_clean = clean(f7_dates)
+f8_clean = clean(f8_dates)
+f9_clean = clean(f9_dates)
+f10_clean = clean(f10_dates)
+f11_clean = clean(f11_dates)
+f12_clean = clean(f12_dates)
+f13_clean = clean(f13_dates)
+f14_clean = clean(f14_dates)
+f15_clean = clean(f15_dates)
+f16_clean = clean(f16_dates)
+f17_clean = clean(f17_dates)
+f18_clean = clean(f18_dates)
+```
+
+```{r}
+glimpse(f10_clean)
+```
+
+```{r}
+unique(f1_clean$vegCvr)
+```
+
+# Create points shapefile
+## Function to make points
+```{r}
+df_to_sf <- function(x){
+  st_as_sf(x, coords = c("lon","lat"), crs = 4326, remove = FALSE)
+}
+```
+## Apply function
+```{r}
+f1_pts = df_to_sf(f1_clean)
+f2_pts = df_to_sf(f2_clean)
+f3_pts = df_to_sf(f3_clean)
+f4_pts = df_to_sf(f4_clean)
+f5_pts = df_to_sf(f5_clean)
+f6_pts = df_to_sf(f6_clean)
+f7_pts = df_to_sf(f7_clean)
+f8_pts = df_to_sf(f8_clean)
+f9_pts = df_to_sf(f9_clean)
+f10_pts = df_to_sf(f10_clean)
+f11_pts = df_to_sf(f11_clean)
+f12_pts = df_to_sf(f12_clean)
+f13_pts = df_to_sf(f13_clean)
+f14_pts = df_to_sf(f14_clean)
+f15_pts = df_to_sf(f15_clean)
+f16_pts = df_to_sf(f16_clean)
+f17_pts = df_to_sf(f17_clean)
+f18_pts = df_to_sf(f18_clean)
+```
+
+```{r}
+unique(f1_pts$msrDOY)
+```
+## write to shapefile
+
+```{r eval=FALSE, include=FALSE}
+st_write(f1_pts, "../outputs/allPoints/Baillargeon_pts.shp", driver="ESRI Shapefile")
+st_write(f2_pts, "../outputs/allPoints/Breen_pts.shp", driver="ESRI Shapefile")
+st_write(f3_pts, "../outputs/allPoints/Buma_pts.shp", driver="ESRI Shapefile")
+st_write(f4_pts, "../outputs/allPoints/Dielman_pts.shp", driver="ESRI Shapefile")
+st_write(f5_pts, "../outputs/allPoints/Douglas_pts.shp", driver="ESRI Shapefile")
+st_write(f6_pts, "../outputs/allPoints/Frost_pts.shp", driver="ESRI Shapefile")
+st_write(f7_pts, "../outputs/allPoints/Gaglioti_pts.shp", driver="ESRI Shapefile")
+st_write(f8_pts, "../outputs/allPoints/Holloway_pts.shp", driver="ESRI Shapefile")
+st_write(f9_pts, "../outputs/allPoints/Loranty_pts.shp", driver="ESRI Shapefile")
+st_write(f10_pts, "../outputs/allPoints/Manies_pts.shp", driver="ESRI Shapefile")
+st_write(f11_pts, "../outputs/allPoints/Natali_pts.shp", driver="ESRI Shapefile")
+st_write(f12_pts, "../outputs/allPoints/ODonnell_pts.shp", driver="ESRI Shapefile")
+st_write(f13_pts, "../outputs/allPoints/Olefeldt_pts.shp", driver="ESRI Shapefile")
+st_write(f14_pts, "../outputs/allPoints/Paulson_pts.shp", driver="ESRI Shapefile")
+st_write(f15_pts, "../outputs/allPoints/Rocha_pts.shp", driver="ESRI Shapefile")
+st_write(f16_pts, "../outputs/allPoints/Sizov_pts.shp", driver="ESRI Shapefile")
+st_write(f17_pts, "../outputs/allPoints/Veraverbeke_pts.shp", driver="ESRI Shapefile")
+```
+
+
+# Check data
+```{r}
+head(f1_pts)
+head(f2_pts)
+head(f3_pts)
+head(f4_pts)
+head(f5_pts)
+head(f6_pts)
+head(f7_pts)
+head(f8_pts)
+head(f9_pts)
+head(f10_pts)
+head(f11_pts)
+head(f12_pts)
+head(f13_pts)
+head(f14_pts)
+head(f15_pts)
+head(f16_pts)
+head(f17_pts)
+head(f18_pts)
+```
+
+
+
+# Combine all shapefiles
+```{r}
+all_pts = dplyr::bind_rows(f1_pts, f2_pts, f3_pts, f4_pts, f5_pts, f6_pts, f7_pts, f8_pts, f9_pts, f10_pts, f11_pts, f12_pts, f13_pts, f14_pts, f15_pts, f16_pts, f17_pts, f18_pts)
+```
+
+# Look at combined data
+```{r}
+head(all_pts)
+```
+
+
+## Check factor values
+```{r}
+unique(all_pts$biome)
+```
+```{r}
+unique(all_pts$msrType)
+```
+```{r}
+unique(all_pts$distur)
+```
+
+```{r}
+min(all_pts$msrDpth)
+max(all_pts$msrDpth)
+```
+
+## Clean up factors
+```{r}
+( all_pts_clean = all_pts %>%
+  mutate(msrType = recode_factor(msrType , "T" = "thaw", "TRUE"= "thaw", A = "active")) %>%
+  mutate(biome = recode_factor(biome, B = "boreal", boreal = "boreal", "T" = "tundra", tundra = "tundra")) %>%
+  mutate(distur = recode_factor(distur, burned = "burned", burn = "burned", Burned = "burned", Burn = "burned", '72burn' = "burned", Unburn = 'unburned', unburn = 'unburned', unburned = 'unburned')) %>%
+    drop_na(msrType) %>%
+    drop_na(msrDepth) 
+  )
+```
+## View Column Names 
+
+```{r}
+cat(paste0(sprintf('"%s"', colnames(all_pts_clean)), collapse = ", "))
+```
+
+## Check factors again
+
+```{r}
+unique(all_pts_clean$biome)
+```
+```{r}
+unique(all_pts_clean$msrType)
+```
+
+
+
+```{r}
+all_pts_clean[is.na(all_pts_clean$msrType),]
+```
+
+## Check missing DOY
+```{r}
+( 
+  DOY_na = all_pts_clean %>% filter_at(vars(msrDOY), all_vars(is.na(.))) 
+)
+
+unique(DOY_na$last_nm)
+```
+
+as of 11-14-2023 missing DOY for 2874 data points
+```{r}
+(
+  dropDOYNA = all_pts_clean %>% filter(msrDOY>0)
+)
+```
+With DOY na dropped total of 49259 data points
+```{r}
+sort(unique(all_pts_clean$year))
+```
+# write to shapefile
+```{r eval=FALSE, include=FALSE}
+st_write(all_pts_clean, "../outputs/allPoints/AllDataPts.shp", driver="ESRI Shapefile") 
+```
+```{r eval=FALSE, include=FALSE}
+st_write(dropDOYNA, "../outputs/allPoints/AllDataPtsDropNaDoy.shp", driver="ESRI Shapefile")
+```
