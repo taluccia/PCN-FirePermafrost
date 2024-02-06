@@ -1,0 +1,131 @@
+---
+title: "QAQC Datacube"
+author: "Anna Talucci"
+date: "2024-01-30"
+output: html_document
+---
+
+
+# clear environment
+```{r}
+rm(list=ls())
+```
+
+# Overview
+QAQC of full contributed data set. Identify NAs for key variables (e.g., DOY, msrDepth, hitRock, gtProbe).
+
+
+# Packages
+
+```{r}
+library(tidyverse)
+library(lubridate)
+```
+
+# Data
+
+```{r}
+datacube = read_csv("../data/dataCube/PermafrostFireDataCube.csv")
+```
+
+```{r}
+datacube
+```
+
+# Existing NAs
+
+## Check missing DOY
+As of 1-31-2024 Dieleman is missing day of month for 1843 measurements
+```{r}
+( 
+  DOY_na = datacube %>% filter_at(vars(msrDOY), all_vars(is.na(.))) 
+)
+
+unique(DOY_na$lastNm)
+```
+
+## Drop NA
+```{r eval=FALSE, include=FALSE}
+(
+  dropDOYNA = datacube %>% filter(msrDOY>0)
+)
+```
+
+## missing measurements
+```{r}
+(msrNA = datacube %>% filter(is.na(msrDepth)) )
+unique(msrNA$lastNm)
+```
+```{r}
+(rocky = datacube %>% filter(is.na(msrDepth)) %>% filter(hitRock=="y") )
+unique(rocky$lastNm)
+```
+
+```{r}
+(rockno = datacube %>% filter(is.na(msrDepth)) %>% filter(hitRock=="n") )
+unique(rockno$lastNm)
+```
+
+```{r}
+datacube %>% filter(is.na(msrDepth)) %>% filter(hitRock=="n") %>% filter(submitNm=="Baillargeon")
+datacube %>% filter(is.na(msrDepth)) %>% filter(hitRock=="n") %>% filter(submitNm=="Natali")
+
+datacube %>% filter(is.na(msrDepth)) %>% filter(hitRock=="n") %>% filter(submitNm=="O'Donnell")
+datacube %>% filter(is.na(msrDepth)) %>% filter(hitRock=="n") %>% filter(submitNm=="Rocha")
+
+datacube %>% filter(is.na(msrDepth)) %>% filter(hitRock=="n") %>% filter(submitNm=="Sizov")
+```
+For Baillargeon, the NA values for measurements (n=8) were a function of an existing transect subsiding into a lake.
+For Natali, the NA values for measurements (n=41) were a function ....
+For O'Donnell, the NA values for measurements (n=4) were a function ....
+For Rocha, the NA values for measurements (n=390) were a function ....
+For Sizov, the NA values for measurements (n=4) were a function ....
+
+
+## HitRock yes 
+
+```{r}
+(yesRock = datacube %>% filter(hitRock=="y") )
+unique(yesRock$lastNm)
+```
+Measurements that hit Rock n=882
+
+```{r}
+(gtProbe = datacube %>% filter(gtProbe=="y") )
+unique(gtProbe$lastNm)
+```
+
+Measurements greater than the measurement probe n=2225
+
+# Summary characteristics for tables
+```{r}
+datacube %>% group_by(lastNm, cntryId, biome) %>%
+  summarize(fireYears = paste(sort(unique(fireYr)), collapse = ", ")) %>%
+  write_csv(., '../outputs/summaryTables/SummaryFireYear.csv')
+```
+
+# Counts
+```{r}
+data %>% group_by(cntryId, biome, siteId, lastNm) %>%
+  summarize(n=n())
+```
+
+```{r}
+data %>% group_by(cntryId, biome,  plotId, siteId, lastNm) %>%
+  summarize(n=n())
+```
+
+```{r}
+data %>% group_by(cntryId, biome,  fireYr, lastNm ) %>%
+  summarize(n=n())
+```
+
+```{r}
+data %>% group_by(lastNm ) %>%
+  summarize(n=n())
+```
+
+```{r}
+data %>% filter(lastNm=="Schulze")
+```
+

@@ -1,0 +1,233 @@
+---
+title: "Figure Measured Vs Predicted"
+author: "Anna Talucci"
+date: "2023-05-18"
+output: html_document
+---
+
+
+# clear environment
+```{r}
+rm(list=ls())
+```
+
+# Overview
+Figures looking at measured versus predicted
+
+
+# Packages
+
+```{r}
+library(tidyverse)
+library(lubridate)
+library(ggpubr)
+library(ggnewscale)
+```
+
+# Plot themes
+```{r}
+comp_theme = theme_bw() + theme(legend.position = "none") +  
+  theme(panel.grid.major = element_blank()) +
+    theme(axis.title.y = element_text(size = 11, hjust = 0.5, vjust = 1.1),
+        axis.text.x = element_text(size = 10, color = "black"),
+        axis.text.y = element_text(size = 10, color = "black"))
+```
+
+# Data
+
+## Standardized measures
+```{r}
+allDataALT = read_csv("../data/Standardize/AllDataStandardizeALTwithDates.csv")
+```
+
+```{r}
+allDataALT
+```
+```{r}
+( example1 = allDataALT[1, ] )
+```
+# Select data
+```{r}
+( dataFig = allDataALT %>% 
+    dplyr::select(plot_id:site_id, cntry_c, thw_ctv, thw_dpt, AdjALT, julinDt, altDate, dateDiff, diffALT) %>% 
+    rename(dateMsr = julinDt, datePrd = altDate, dpthMsr = thw_dpt, dpthPrd=AdjALT, diffDate = dateDiff, diffDpth = diffALT))
+```
+
+# Filter and sampling
+
+## Small sample for paired figure
+```{r}
+( sampleActive = dataFig %>% 
+  filter(thw_ctv =="active") %>%
+  slice_sample(n = 20) %>%
+    mutate(paired = row_number()) %>%
+    dplyr::select(plot_id, site_id, paired, thw_ctv, dpthMsr, dpthPrd) %>%
+    pivot_longer(
+    cols = starts_with("dpth"),
+    names_to = "msrPrd",
+    values_to = "depth")
+    
+)
+
+```
+
+## Data for Date figure
+```{r}
+( forDates = dataFig %>% 
+  dplyr::select(plot_id, site_id, thw_ctv, dateMsr, datePrd) %>%
+    pivot_longer(
+    cols = starts_with("date"),
+    names_to = "msrPrd",
+    values_to = "date")
+)
+```
+
+## Data for depth figure
+```{r}
+( forDepth = dataFig %>% 
+  dplyr::select(plot_id, site_id, thw_ctv, dpthMsr, dpthPrd) %>%
+    pivot_longer(
+    cols = starts_with("dpth"),
+    names_to = "msrPrd",
+    values_to = "depth")
+)
+```
+
+
+# Summarize
+```{r}
+forDates %>% 
+  group_by(thw_ctv, msrPrd) %>%
+  summarise(mean= mean(date),
+            sd = sd(date),
+            min = min(date),
+            max = max(date))
+```
+
+```{r}
+forDepth %>% 
+  group_by(thw_ctv, msrPrd) %>%
+  summarise(mean= mean(depth),
+            sd = sd(depth),
+            min = min(depth),
+            max = max(depth))
+```
+
+# Figures
+
+## Violin plot of date measured vs predicted
+```{r}
+( fig1 = forDates %>% 
+    filter(thw_ctv=="thaw") %>% 
+    mutate(msrPrd = fct_recode(msrPrd,
+                                  "Measured thaw" = "dateMsr",
+                                  "Predicted ALT" = "datePrd")) %>%
+ggplot(., aes(x = msrPrd, y=date)) +
+  geom_violin() + 
+  
+  geom_boxplot(width=0.1) +
+  stat_summary(fun=mean, geom="point", shape=23, size=2, color="red") +
+  labs(x="", y="Julian Date") +
+  comp_theme 
+  
+)
+```
+
+```{r}
+( fig2 = forDates %>% 
+    filter(thw_ctv=="active") %>% 
+    mutate(msrPrd = fct_recode(msrPrd,
+                                  "Measured active" = "dateMsr",
+                                  "Predicted ALT" = "datePrd")) %>%
+ggplot(., aes(x = msrPrd, y=date)) +
+  geom_violin() + 
+  
+  geom_boxplot(width=0.1) +
+  stat_summary(fun=mean, geom="point", shape=23, size=2, color="red") +
+  
+  labs(x="", y="Julian Date") +
+  comp_theme 
+)
+```
+
+```{r}
+( comboDates =  cowplot::plot_grid(fig1, fig2, ncol=1, labels = c('A', 'B'), label_size = 12)  ) 
+```
+
+```{r}
+ggsave("../figures/DatesMeasurePredictViolin.png", plot = comboDates, width = 3, height =4, units = c("in"), dpi=600, bg = "white" )
+```
+
+## Violin plot of depth measured vs predicted
+```{r}
+( fig3 = forDepth %>% 
+    filter(thw_ctv=="thaw") %>% 
+    mutate(msrPrd = fct_recode(msrPrd,
+                                  "Measured thaw" = "dpthMsr",
+                                  "Predicted ALT" = "dpthPrd")) %>%
+ggplot(., aes(x = msrPrd, y=depth)) +
+  geom_violin() + 
+  
+  geom_boxplot(width=0.1) +
+  stat_summary(fun=mean, geom="point", shape=23, size=2, color="red") +
+  
+  labs(x="", y="Depth (cm)") +
+  comp_theme 
+)
+```
+
+```{r}
+( fig4 = forDepth %>% 
+    filter(thw_ctv=="active") %>% 
+    mutate(msrPrd = fct_recode(msrPrd,
+                                  "Measured active" = "dpthMsr",
+                                  "Predicted ALT" = "dpthPrd")) %>%
+ggplot(., aes(x = msrPrd, y=depth)) +
+  geom_violin() + 
+  
+  geom_boxplot(width=0.1) +
+  stat_summary(fun=mean, geom="point", shape=23, size=2, color="red") +
+
+  labs(x="", y="Depth (cm)") +
+comp_theme 
+)
+```
+
+
+```{r}
+( comboDepths =  cowplot::plot_grid(fig3, fig4, ncol=1, labels = c('A', 'B'), label_size = 12)  ) 
+```
+
+```{r}
+ggsave("../figures/DepthsMeasurePredictViolin.png", plot = comboDepths, width = 3, height =4, units = c("in"), dpi=600, bg = "white" )
+```
+
+## Paired
+
+
+
+
+```{r}
+( paired2 = sampleActive %>% 
+    mutate(msrPrd = fct_recode(msrPrd,
+                                  "Measured active" = "dpthMsr",
+                                  "Predicted ALT" = "dpthPrd")) %>%
+    ggplot(., aes(x = msrPrd, y=depth)) +
+
+  geom_line(aes(group = paired),  linetype = "dashed") +
+  scale_color_manual(values = c('#7570b3', '#d95f02'), labels = c("Measured", "Predicted"), name="") +
+     new_scale_color() +
+        geom_point(aes(fill= msrPrd, color=msrPrd), size=3,  pch=21, stroke =1.8) +
+          scale_fill_manual(name="", values=c( "#3b5a9d", "#FEC287FF"))  +
+          scale_color_manual(name="", values = c( "grey79", "black")) +
+  labs(x="", y="Depth (cm)") +
+    comp_theme 
+
+
+)
+
+```
+
+```{r}
+ggsave("../figures/DepthsMeasurePredictActivePairedSample.png", plot = paired2, width = 3, height =3, units = c("in"), dpi=600, bg = "white" )
+```
