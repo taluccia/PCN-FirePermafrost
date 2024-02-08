@@ -142,6 +142,8 @@ ecoPalette = c('#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdb
 
 ```{r}
 permafrost_palette = c('#71A6D1', '#99C4E1', '#C0E2F0')
+permafrost_palette2 = c('#88419d', '#8c6bb1','#8c96c6')
+permafrost_palette3 = c('#c994c7','#d4b9da', '#f1eef6')
 ```
 
 ```{r}
@@ -267,16 +269,17 @@ ggplot() +
 ```
 
 ## Overview map by Ecozone
+theme(panel.grid.major = element_line(color = "red", linetype = 2))
 ```{r}
 ( overviewMap = ggplot() +
      geom_sf(data = nh_pp, fill = "#F9F6EE", colour="#A9AB9D") +
     geom_sf(data = permafrost1_pp, aes(fill = EXTENT), colour= NA, alpha=.75 ) +
   scale_fill_manual(values = permafrost_palette, labels  = c("continuous", "discontinuous", "sporatic"),
                       name = "Permafrost") +
- geom_sf(data=artic_pp, fill=NA, colour = "#2F4F4F", lwd=1, linetype="dashed") +
+ geom_sf(data=artic_pp, fill=NA, colour = "#2F4F4F", lwd=.8, linetype="dashed") +
    
   new_scale_fill() +
-   geom_sf(data = wwf, aes(fill = ECO_NAME, color=ECO_NAME, size=prct),  pch=21, stroke =1.8, alpha=.65) +
+   geom_sf(data = wwf, aes(fill = ECO_NAME, color=ECO_NAME, size=prct),  pch=21, stroke =1, alpha=.65) +
   geom_sf_text(data = wwf, aes(label = prct), size=2) +
     scale_fill_manual(values=ecoPalette) +
   scale_color_manual(values=c("black", "black", "black","black","black","black","black","black","black","black","black","black","black")) +
@@ -285,47 +288,14 @@ ggplot() +
 
   coord_sf(xlim = st_coordinates(disp_window)[,'X'], ylim = st_coordinates(disp_window)[,'Y']) +
 
-  theme(panel.grid.major = element_line(color = gray(0.5), linetype = "dashed", size = 0.5), 
+  theme(panel.grid.major = element_line(color = "honeydew4", linetype = "solid", size = 0.3), 
         panel.background = element_rect(fill = "#C5D8D7")) +
-  theme(plot.margin=unit(c(0.5, 0.5, 0.5, 0.5), "mm")) + 
+  theme(plot.margin=unit(c(t=0.5, r=1.5, b=0.5,l= 1.5), "mm")) + 
   theme(legend.position = "none", 
         axis.title.x = element_blank(), 
         axis.title.y = element_blank())
 )
 ```
-
-
-
-```{r eval=FALSE, include=FALSE}
-ggplot() +
-     geom_sf(data = nh_pp, fill = "#F9F6EE", colour="#A9AB9D") +
-    geom_sf(data = permafrost1_pp, aes(fill = EXTENT), colour= NA, alpha=.75 ) +
-  scale_fill_manual(values = permafrost_palette, labels  = c("continuous", "discontinuous", "sporatic"),
-                      name = "Permafrost") +
- geom_sf(data=artic_pp, fill=NA, colour = "#2F4F4F", lwd=1, linetype="dashed") +
-   
-  new_scale_fill() +
-  geom_point(data = wwf_pp, aes(x=x, y=y, fill = ECO_NAME, color=ECO_NAME, size=prct, label=prct),  pch=21, stroke =1.8, alpha=.65) +
-   geom_text(data = wwf_pp, aes(x=x, y=y,label=prct),  size=2) +
-    scale_fill_manual(values=ecoPalette) +
-  scale_color_manual(values=c("black", "black", "black","black","black","black","black","black","black","black","black","black","black")) +
-  scale_size(range = c(6, 11), # point size range
-             breaks = c(1, 10, 20, 30, 40 , 50), limits = c(0, 50))+
-  #geom_sf_text(data = eco_grouped, aes(label = prct), size=3) +
-  coord_sf(xlim = st_coordinates(disp_window)[,'X'], ylim = st_coordinates(disp_window)[,'Y']) +
-    #coord_sf(xlim = disp_win_coord[,'X'], ylim = disp_win_coord[,'Y']) +
-  #coord_sf(xlim = c(-4002324, 3512498), ylim = c(-3008650,  4002452) ) +
-  theme(panel.grid.major = element_line(color = gray(0.5), linetype = "dashed", size = 0.5), 
-        panel.background = element_rect(fill = "#C5D8D7")) +
-  theme(plot.margin=unit(c(0,0,0,0), "mm")) + 
-  theme(legend.position = "bottom", 
-        axis.title.x = element_blank(), 
-        axis.title.y = element_blank())
-
-```
-
-
-
 
 
 # Maps with Legend
@@ -361,7 +331,7 @@ ggplot() +
 ```
 ```{r}
 # Extract the legend. Returns a gtable
-legReco <- get_legend(overviewLegend)
+legReco <- get_legend(ecozoneLegendR)
 
 # Convert to a ggplot and print
 ecoRight = as_ggplot(legReco)
@@ -389,15 +359,15 @@ ggsave("../figures/EcozoneLegendRight.png", plot = ecoRight, dpi = 600,  bg='whi
         size = 0.5), panel.background = element_rect(fill = "#C5D8D7")) +
   theme(plot.margin=unit(c(0,0,0,0), "mm")) + 
   theme(legend.position = "bottom",
-         legend.text=element_text(size=6),
+         legend.text=element_text(size=8),
         legend.margin = margin(0, 0, 0, 0),
-        legend.title=element_text(size=7),
+        legend.title=element_text(size=9),
          legend.key=element_blank(),
         legend.key.size = unit(5, 'mm'),
         axis.title.x = element_blank(), 
         axis.title.y = element_blank()) +
-  guides(color = guide_legend(title.position = "top", nrow=3,bycol=TRUE, override.aes = list(size = 4)),
-         fill = guide_legend(title.position = "top", nrow=3,bycol=TRUE, override.aes = list(size = 4))) 
+  guides(color = guide_legend(title.position = "top", nrow=4,bycol=TRUE, override.aes = list(size = 4)),
+         fill = guide_legend(title.position = "top", nrow=4,bycol=TRUE, override.aes = list(size = 4))) 
 )
 
 ```
@@ -407,7 +377,7 @@ ggsave("../figures/EcozoneLegendRight.png", plot = ecoRight, dpi = 600,  bg='whi
 
 ```{r fig.height=5, fig.width=6}
 (
-  permafrostLegend <- ggplot() +
+  permafrostLegendB <- ggplot() +
      geom_sf(data = nh_pp, fill = "#F9F6EE", colour="#A9AB9D") +
     geom_sf(data = permafrost1_pp, aes(fill = EXTENT), colour= NA ) +
  
@@ -420,8 +390,8 @@ ggsave("../figures/EcozoneLegendRight.png", plot = ecoRight, dpi = 600,  bg='whi
         plot.margin=unit(c(0,0,0,0), "mm"),
         legend.key=element_blank(),
         legend.position = "bottom",        
-        legend.text=element_text(size=6),
-        legend.title=element_text(size=7)) +
+        legend.text=element_text(size=8),
+        legend.title=element_text(size=9)) +
  
   guides(fill=guide_legend( title.position = "top", ncol=3,byrow=TRUE))
 )
@@ -466,10 +436,9 @@ ggsave("../figures/PermafrostLegndRight.png", plot = pfRight, dpi = 600,  bg='wh
 
 # Cowplot
 ```{r}
-
-legend_permafrost = cowplot::get_legend(permafrostLegend)
+legend_permafrostB = cowplot::get_legend(permafrostLegendB)
 legend_permafrostR = cowplot::get_legend(permafrostLegendR)
-legendEco = cowplot::get_legend(ecozoneLegendR)
+legendEcoR = cowplot::get_legend(ecozoneLegendR)
 legendEcoB = cowplot::get_legend(ecozoneLegendB)
 ```
 
@@ -482,7 +451,7 @@ legend1_right <- cowplot::plot_grid(legend_permafrostR, align = "v", nrow = 2)
 # 4.2 add second legend to grid, specifying its location
 ( legendRight <- legend1_right +
   ggplot2::annotation_custom(
-    grob = legendEco,
+    grob = legendEcoR,
     xmin = 0.55, xmax = 0.55, ymin = 0.45, ymax = 0.45
   )
 )
@@ -498,9 +467,7 @@ ggsave("../figures/legendRight.png", plot = legendRight, dpi = 600,  bg='white')
 
 
 ## Bottom Legends
-```{r}
-( pairBottom = plot_grid(legend_permafrost, legendEcoB, nrow = 2, align = "v"))
-```
+
 ```{r}
 # 4.1 setup legends grid
 legend1_grid <- cowplot::plot_grid(legendEcoB, align = "v", nrow = 2)
@@ -508,8 +475,8 @@ legend1_grid <- cowplot::plot_grid(legendEcoB, align = "v", nrow = 2)
 # 4.2 add second legend to grid, specifying its location
 ( legendBottom <- legend1_grid +
   ggplot2::annotation_custom(
-    grob = legend_permafrost,
-    xmin = 0.27, xmax = 0.27, ymin = 0.85, ymax = 0.85
+    grob = legend_permafrostB,
+    xmin = 0.21, xmax = 0.21, ymin = 0.64, ymax = 0.64
   )
 )
 ```
@@ -518,51 +485,29 @@ legend1_grid <- cowplot::plot_grid(legendEcoB, align = "v", nrow = 2)
 ggsave("../figures/legendBottom.png", plot = legendBottom, dpi = 600,  bg='white')
 ```
 
-## Grid map with legend
+## Grid map with legend Right
 ```{r fig.height=6, fig.width=6}
 MapRightLegend = ggdraw(xlim = c(0, 6), ylim = c(0, 6)) +
     draw_plot(overviewMap, x = 0, y = 0, width = 6, height = 6) + 
   draw_image("../images/legendRight.PNG", scale = 0.78, x = 4.5, y = .6, width = 2, height = 3) 
 ```
 
-# Save Image
+### Save Image
 ```{r eval=FALSE, include=FALSE}
 ggsave("../figures/PCNMapOverview.png", plot = MapRightLegend, dpi = 600, width = 6, height = 6, bg='white')
 ```
 
-
-
-# Extra Fiddling
-
-```{r}
-gridMap = cowplot::plot_grid(overviewMap, align = "v")
-
-( MapLegendRight <- gridMap +
-  ggplot2::annotation_custom(
-    grob = legendRight,
-    xmin = 0.88, xmax = 0.88, ymin = 0.3, ymax = 0.3
-  ) 
-)
-```
-
-
-```{r}
-gridMap = cowplot::plot_grid(overviewMap, align = "v")
-
-( MapLegend <- gridMap +
-  ggplot2::annotation_custom(
-    grob = legendEco,
-    xmin = 0.88, xmax = 0.88, ymin = 0.3, ymax = 0.3
-  ) +
-    ggplot2::annotation_custom(
-    grob = legend_permafrostR,
-    xmin = 0.88, xmax = 0.88, ymin = 0.7, ymax = 0.7
-  )
-)
-```
-```{r}
-ggdraw(xlim = c(0, 6), ylim = c(0, 6)) +
+## Grid map with legend Right
+```{r fig.height=6, fig.width=6}
+MapBottomLegend = ggdraw(xlim = c(0, 6), ylim = c(0, 6)) +
     draw_plot(overviewMap, x = 0, y = 0, width = 6, height = 6) + 
-  draw_image("../images/legendBottom.PNG", scale = 0.9, x = 0, y = 0, width = 6, height = 1) 
-
+  draw_image("../images/legendBottom.PNG", scale = 0.85, x = .2, y = -0.1, width = 6, height = 1) 
 ```
+
+### Save Image
+```{r eval=FALSE, include=FALSE}
+ggsave("../figures/PCNMapOverviewBottomLegend.png", plot = MapBottomLegend, dpi = 600, width = 6, height = 6, bg='white')
+```
+
+
+

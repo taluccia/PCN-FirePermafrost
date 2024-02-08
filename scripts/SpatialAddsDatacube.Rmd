@@ -199,17 +199,22 @@ eco03 =  tunBorWwf %>%
   mutate(ECO_NAME='Beringia lowland tundra')
 ```
 
+
+3              Beringia lowland tundra POINT (-160.8539 60.86536)
+4               Beringia upland tundra POINT (-161.7837 62.63477)
+
 ## 4. "Beringia upland tundra" 
 ```{r}
-eco04 =  tunBorWwf %>% 
+( eco04 =  tunBorWwf %>% 
     filter(ECO_NAME=='Beringia upland tundra') %>%
     st_geometry() %>% # pull just geometry
   st_combine() %>%  # from many points to a single multipoint
   st_centroid() %>% # compute centroid of the multipoint
   st_as_sf() %>% # make it a sf object again 
-  mutate(ECO_NAME='Beringia upland tundra')
+  mutate(ECO_NAME='Beringia upland tundra') )
 ```
-
+Longitude: -165.43798
+Latitude: 64.52649
 ## 5. Chukchi Peninsula tundra 
 ```{r}
 eco05 =  tunBorWwf %>% 
@@ -317,7 +322,23 @@ eco13 =  tunBorWwf %>%
     rename(geometry = x)
 )
 ```
+ 
+# Edit geometry of Beringa Upland and lowland to limit overlap
+```{r}
+wwfCentroid
+```
+Longitude: -165.43798
+Latitude: 64.52649
+```{r}
+st_geometry(wwfCentroid) <- st_sfc(
+    ifelse(wwfCentroid$ECO_NAME == "Beringia upland tundra", st_sfc(st_point(c(-165.43798, 64.52649))), wwfCentroid$geometry),
+    crs = st_crs(wwfCentroid$geometry))
+```
 
+```{r}
+wwfCentroid
+```
+# Reproject and finalize
 ```{r}
 ( wwfCentroidreproj = wwfCentroid %>% 
     st_transform(., crs = polarProj) %>% 

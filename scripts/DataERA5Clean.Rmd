@@ -11,10 +11,11 @@ rm(list=ls())
 ```
 
 # Overview
+ERA5 data is extracted from Google Earth Engine and field sites by sample year. This script then takes that data and organizes it in a way that it can but sued to predict end of season active layer thickness.
 
-Take extracted ERA 5 data from google earth engine...
+Notes:
+- 2016 was to large to process as one extraction in GEE; it is split by USA and Canada.
 
-ERA5 data was extract by year
 # Packages
 
 ```{r}
@@ -24,11 +25,9 @@ library(sf)
 library(data.table)
 ```
 
-
-
 # Data
 
-## vector of data files
+## Vector of data files
 ```{r}
 f <- list.files(path = "../data/ERA5DataEE/",
                 pattern = "*.csv", full.names = TRUE)
@@ -52,20 +51,24 @@ f2012 <- read.csv(f[9], header = TRUE)
 f2013 <- read.csv(f[10], header = TRUE) 
 f2014 <- read.csv(f[11], header = TRUE) 
 f2015 <- read.csv(f[12], header = TRUE) 
-f2016 <- read.csv(f[13], header = TRUE) 
-f2017 <- read.csv(f[14], header = TRUE) 
-f2018 <- read.csv(f[15], header = TRUE) 
-f2019 <- read.csv(f[16], header = TRUE) 
-f2020 <- read.csv(f[17], header = TRUE) 
+f2016ca <- read.csv(f[13], header = TRUE) 
+f2016us <- read.csv(f[14], header = TRUE) 
+f2017 <- read.csv(f[15], header = TRUE) 
+f2018 <- read.csv(f[16], header = TRUE) 
+f2019 <- read.csv(f[17], header = TRUE) 
+f2020 <- read.csv(f[18], header = TRUE) 
+f2023 <- read.csv(f[19], header = TRUE) 
 ```
 
 ## View DF
 ```{r}
 f2001
+colnames(f2001)
 ```
 
 
 ## Process
+1. Select columns of interest
 1. pivot longer so column of temperature and date
 2. Group by site_id
 3. Select dates after day of thaw measurement
@@ -74,104 +77,112 @@ f2001
 
 ```{r}
 ( df2001 = f2001 %>%
-  dplyr::select(brl_tnd:year, X20010401_temperature_2m:X20011031_temperature_2m) %>%
+  dplyr::select(biome:year, X20010401_temperature_2m:X20011031_temperature_2m) %>%
     mutate(id = row_number()) )
 ```
 
 ```{r}
 ( df2005 = f2005 %>%
-  dplyr::select(brl_tnd:year, X20050401_temperature_2m:X20051031_temperature_2m) %>%
+  dplyr::select(biome:year, X20050401_temperature_2m:X20051031_temperature_2m) %>%
     mutate(id = row_number()) )
 ```
 
 ```{r}
 ( df2006 = f2006 %>%
-  dplyr::select(brl_tnd:year, X20060401_temperature_2m:X20061031_temperature_2m) %>%
+  dplyr::select(biome:year, X20060401_temperature_2m:X20061031_temperature_2m) %>%
     mutate(id = row_number()) )
 ```
 
 ```{r}
 ( df2007 = f2007 %>%
-  dplyr::select(brl_tnd:year, X20070401_temperature_2m:X20071031_temperature_2m) %>%
+  dplyr::select(biome:year, X20070401_temperature_2m:X20071031_temperature_2m) %>%
     mutate(id = row_number()) )
 ```
 
 ```{r}
 ( df2008 = f2008 %>%
-  dplyr::select(brl_tnd:year, X20080401_temperature_2m:X20081031_temperature_2m) %>%
+  dplyr::select(biome:year, X20080401_temperature_2m:X20081031_temperature_2m) %>%
     mutate(id = row_number()) )
 ```
 
 ```{r}
 ( df2009 = f2009 %>%
-  dplyr::select(brl_tnd:year, X20090401_temperature_2m:X20091031_temperature_2m) %>%
+  dplyr::select(biome:year, X20090401_temperature_2m:X20091031_temperature_2m) %>%
     mutate(id = row_number()) )
 ```
 
 ```{r}
 ( df2010 = f2010 %>%
-  dplyr::select(brl_tnd:year, X20100401_temperature_2m:X20101031_temperature_2m) %>%
+  dplyr::select(biome:year, X20100401_temperature_2m:X20101031_temperature_2m) %>%
     mutate(id = row_number()) )
 ```
 
 ```{r}
 ( df2011 = f2011 %>%
-  dplyr::select(brl_tnd:year, X20110401_temperature_2m:X20111031_temperature_2m) %>%
+  dplyr::select(biome:year, X20110401_temperature_2m:X20111031_temperature_2m) %>%
     mutate(id = row_number()) )
 ```
 
 ```{r}
 ( df2012 = f2012 %>%
-  dplyr::select(brl_tnd:year, X20120401_temperature_2m:X20121031_temperature_2m) %>%
+  dplyr::select(biome:year, X20120401_temperature_2m:X20121031_temperature_2m) %>%
     mutate(id = row_number()) )
 ```
 
 ```{r}
 ( df2013 = f2013 %>%
-  dplyr::select(brl_tnd:year, X20130401_temperature_2m:X20131031_temperature_2m) %>%
+  dplyr::select(biome:year, X20130401_temperature_2m:X20131031_temperature_2m) %>%
     mutate(id = row_number()) )
 ```
 
 ```{r}
 ( df2014 = f2014 %>%
-  dplyr::select(brl_tnd:year, X20140401_temperature_2m:X20141031_temperature_2m) %>%
+  dplyr::select(biome:year, X20140401_temperature_2m:X20141031_temperature_2m) %>%
     mutate(id = row_number()) )
 ```
 
 ```{r}
 ( df2015 = f2015 %>%
-  dplyr::select(brl_tnd:year, X20150401_temperature_2m:X20151031_temperature_2m) %>%
+  dplyr::select(biome:year, X20150401_temperature_2m:X20151031_temperature_2m) %>%
     mutate(id = row_number()) )
 ```
 
 ```{r}
+f2016 = bind_rows(f2016ca, f2016us)
 ( df2016 = f2016 %>%
-  dplyr::select(brl_tnd:year, X20160401_temperature_2m:X20161031_temperature_2m) %>%
+  dplyr::select(biome:year, X20160401_temperature_2m:X20161031_temperature_2m) %>%
     mutate(id = row_number()) )
 ```
 
 ```{r}
 ( df2017 = f2017 %>%
-  dplyr::select(brl_tnd:year, X20170401_temperature_2m:X20171031_temperature_2m) %>%
+  dplyr::select(biome:year, X20170401_temperature_2m:X20171031_temperature_2m) %>%
     mutate(id = row_number()) )
 ```
 
 ```{r}
 ( df2018 = f2018 %>%
-  dplyr::select(brl_tnd:year, X20180401_temperature_2m:X20181031_temperature_2m) %>%
+  dplyr::select(biome:year, X20180401_temperature_2m:X20181031_temperature_2m) %>%
     mutate(id = row_number()) )
 ```
 
 ```{r}
 ( df2019 = f2019 %>%
-  dplyr::select(brl_tnd:year, X20190401_temperature_2m:X20191031_temperature_2m) %>%
+  dplyr::select(biome:year, X20190401_temperature_2m:X20191031_temperature_2m) %>%
     mutate(id = row_number()) )
 ```
 
 ```{r}
 f2020
 ( df2020 = f2020 %>%
-  dplyr::select(brl_tnd:year, X20200401_temperature_2m:X20201031_temperature_2m) %>%
+  dplyr::select(biome:year, X20200401_temperature_2m:X20201031_temperature_2m) %>%
+    mutate(id = row_number()) )
+```
+
+```{r}
+f2023
+( df2023 = f2023 %>%
+  dplyr::select(biome:year, X20230401_temperature_2m:X20231031_temperature_2m) %>%
     mutate(id = row_number()) )
 ```
 
@@ -185,7 +196,7 @@ cleanDf = function(x)  {
     values_to = "TempC",
     values_drop_na = TRUE) %>% 
   separate(DateTemp, c("tempDate", NA)) %>% 
-    mutate(plot_id = as.character(plot_id)) %>%
+    mutate(plotId = as.character(plotId)) %>%
     mutate(across(tempDate, ~ . |> str_extract("\\d+") |> as.character())) %>%
     mutate(tempDate=ymd(tempDate)) %>%
     mutate(julianTemp = yday(tempDate)) -> x
@@ -224,17 +235,34 @@ clean2017 = df2017 %>% cleanDf()
 clean2018 = df2018 %>% cleanDf()
 clean2019 = df2019 %>% cleanDf()
 clean2020 = df2020 %>% cleanDf()
+clean2023 = df2023 %>% cleanDf()
+```
+# Identify ALT date
+
+## Functions to ID ALT Date
+```{r}
+altDateFun = function(x)  {
+  x %>%
+  arrange(id, tempDate) %>%
+  group_by(id) %>%
+  mutate(RollMean = zoo::rollmean(TempC, k = 5, fill = NA)) %>% 
+    filter(julianTemp>=200)  %>%
+    ungroup() %>%
+    filter(RollMean <=0) %>%
+    group_by(lastNm, plotId, siteId, year) %>% # regroup by last name, plot id, and site id
+  #filter(site_id== "DFTB") %>%
+    arrange(julianTemp) %>% # sort by date of temp measures
+  mutate(julianTemp_diff = julianTemp - lag(julianTemp)) %>%
+  filter(julianTemp_diff >= 1) %>%
+  summarize(minDate = min(julianTemp),
+            meanDate = mean(julianTemp),
+            maxDate = max(julianTemp)) %>%
+    ungroup() %>%
+  dplyr::select(lastNm, plotId, siteId, year, minDate) -> x
+  return(x)
+}
 ```
 
-# Combine all clean
-
-
-
-
-
-
-
-## Identify ALT date
 
 ### 2001
 
@@ -243,738 +271,101 @@ clean2001
 ```
 
 ```{r}
-uniqueDate = clean2001 %>%
-  arrange(id, tempDate) %>% # sorts from first to last date
-  group_by(id) %>% # group by ids
-  mutate(RollMean = zoo::rollmean(TempC, k = 5, fill = NA)) %>% # calculate a rolling mean of temp
-    filter(julianTemp >= 200)  %>% # select dates after Julian day 200
-    ungroup() %>% # ungroup
-    filter(RollMean <=0) %>% # remove rolling means greater than or equal to zero
-    group_by(last_nm, plot_id, site_id) 
-
-unique(uniqueDate$tempDate)
-unique(uniqueDate$site_id)
-
-clean2001 %>%
-  arrange(id, tempDate) %>% # sorts from first to last date
-  group_by(id) %>% # group by ids
-  mutate(RollMean = zoo::rollmean(TempC, k = 5, fill = NA)) %>% # calculate a rolling mean of temp
-    filter(julianTemp >= 200)  %>% # select dates after Julian day 200
-    ungroup() %>% # ungroup
-    filter(RollMean <=0) %>% # remove rolling means greater than or equal to zero
-    group_by(last_nm, plot_id, site_id) %>%
-  summarize(meanTemp = mean(TempC))
-```
-```{r}
-clean2001 %>%
-  arrange(id, tempDate) %>% # sorts from first to last date
-  group_by(id) %>% # group by ids
-  mutate(RollMean = zoo::rollmean(TempC, k = 5, fill = NA)) %>% # calculate a rolling mean of temp
-    filter(julianTemp >= 200)  %>% # select dates after Julian day 200
-    ungroup() %>% # ungroup
-    filter(RollMean <=0) %>% # remove rolling means greater than or equal to zero  
-
-    group_by(last_nm, plot_id, site_id, year) %>% # regroup by last name, plot id, and site id
-  #filter(site_id== "DFTB") %>%
-    arrange(julianTemp) %>% # sort by date of temp measures
-  mutate(julianTemp_diff = julianTemp - lag(julianTemp)) %>%
-  filter(julianTemp_diff >= 1) %>%
-  summarize(minDate = min(julianTemp),
-            meanDate = mean(julianTemp),
-            maxDate = max(julianTemp)) %>%
-    ungroup() %>%
-  dplyr::select(last_nm, plot_id, site_id, year, minDate) 
-```
-```{r}
-clean2001 %>%
-  arrange(id, tempDate) %>% # sorts from first to last date
-  group_by(id) %>% # group by ids
-  mutate(RollMean = zoo::rollmean(TempC, k = 5, fill = NA)) %>% # calculate a rolling mean of temp
-
-    filter(julianTemp >= 200)  %>% # select dates after Julian day 200
-    ungroup() %>% # ungroup
-    filter(RollMean <=0) %>% # remove rolling means greater than or equal to zero  
-
-    group_by(last_nm, plot_id, site_id, year) %>% # regroup by last name, plot id, and site id
-  #filter(site_id== "DFTB") %>%
-    arrange(julianTemp) %>% # sort by date of temp measures
-  mutate(julianTemp_diff = julianTemp - lag(julianTemp)) %>%
-  filter(julianTemp_diff >= 1) %>% # find where the lag is greater than or equal to 1 (remove zero lag days between freezing)
-  summarize(minDate = min(julianTemp),
-            meanDate = mean(julianTemp),
-            maxDate = max(julianTemp)) %>%
-    ungroup() %>%
-  dplyr::select(last_nm, plot_id, site_id, year, minDate) 
-  
+(rm2001Fun = altDateFun(clean2001)) 
+(rm2005Fun = altDateFun(clean2005)) 
+(rm2006Fun = altDateFun(clean2006)) 
+(rm2007Fun = altDateFun(clean2007)) 
+(rm2008Fun = altDateFun(clean2008)) 
+(rm2009Fun = altDateFun(clean2009)) 
 ```
 
 ```{r}
-( date = clean2001 %>%
-  arrange(id, tempDate) %>% # sorts from first to last date
-  group_by(id) %>% # group by ids
-  mutate(RollMean = zoo::rollmean(TempC, k = 5, fill = NA)) %>% # calculate a rolling mean of temp
-
-    filter(julianTemp >= 200)  %>% # select dates after Julian day 200
-    ungroup() %>% # ungroup
-    filter(RollMean <=0) %>% # remove rolling means greater than or equal to zero  
-
-    group_by(last_nm, plot_id, site_id, year) %>% # regroup by last name, plot id, and site id
-  #filter(site_id== "DFTB") %>%
-    arrange(julianTemp) %>% # sort by date of temp measures
-  mutate(julianTemp_diff = julianTemp - lag(julianTemp)) %>%
-  filter(julianTemp_diff >= 1) %>%
-  summarize(minDate = min(julianTemp),
-            meanDate = mean(julianTemp),
-            maxDate = max(julianTemp)) %>%
-    ungroup() %>%
-  dplyr::select(last_nm, plot_id, site_id, year, minDate) 
-  )
-
-date %>% distinct(plot_id, site_id, year) 
+(rm2010Fun = altDateFun(clean2010)) 
+(rm2011Fun = altDateFun(clean2011)) 
+(rm2012Fun = altDateFun(clean2012)) 
+(rm2013Fun = altDateFun(clean2013)) 
+(rm2014Fun = altDateFun(clean2014)) 
+(rm2015Fun = altDateFun(clean2015)) 
 ```
 
-
-### Get ALT date
 ```{r}
-( rm2001 = clean2001 %>%
-  arrange(id, tempDate) %>%
-  group_by(id) %>%
-  mutate(RollMean = zoo::rollmean(TempC, k = 5, fill = NA)) %>% 
-    filter(julianTemp>=200)  %>%
-    ungroup() %>%
-    filter(RollMean <=0) %>%
-    group_by(last_nm, plot_id, site_id, year) %>% # regroup by last name, plot id, and site id
-  #filter(site_id== "DFTB") %>%
-    arrange(julianTemp) %>% # sort by date of temp measures
-  mutate(julianTemp_diff = julianTemp - lag(julianTemp)) %>%
-  filter(julianTemp_diff >= 1) %>%
-  summarize(minDate = min(julianTemp),
-            meanDate = mean(julianTemp),
-            maxDate = max(julianTemp)) %>%
-    ungroup() %>%
-  dplyr::select(last_nm, plot_id, site_id, year, minDate) 
-    
-  )
-
-( distinct2001 = rm2001 %>% distinct(plot_id, site_id, year) )
-
+(rm2016Fun = altDateFun(clean2016)) 
+(rm2017Fun = altDateFun(clean2017)) 
+(rm2018Fun = altDateFun(clean2018)) 
+(rm2019Fun = altDateFun(clean2019)) 
+(rm2020Fun = altDateFun(clean2020)) 
+(rm2023Fun = altDateFun(clean2023)) 
 ```
 
+
+
+# Combine the data
+```{r}
+
+combine2001 = merge(clean2001, rm2001Fun[, c('plotId', 'siteId', 'year', 'minDate')], by = c('plotId', 'siteId', 'year'), all.x=TRUE) 
+
+combine2005 = merge(clean2005, rm2005Fun[, c('plotId', 'siteId', 'year', 'minDate')], by = c('plotId', 'siteId', 'year'), all.x=TRUE) 
+
+  combine2006 = merge(clean2006, rm2006Fun[, c('plotId', 'siteId', 'year', 'minDate')], by = c('plotId', 'siteId', 'year'), all.x=TRUE) 
+
+  combine2007 = merge(clean2007, rm2007Fun[, c('plotId', 'siteId', 'year', 'minDate')], by = c('plotId', 'siteId', 'year'), all.x=TRUE) 
+
+
+  combine2008 = merge(clean2008, rm2008Fun[, c('plotId', 'siteId', 'year', 'minDate')], by = c('plotId', 'siteId', 'year'), all.x=TRUE) 
+ 
+  combine2009 = merge(clean2009, rm2009Fun[, c('plotId', 'siteId', 'year', 'minDate')], by = c('plotId', 'siteId', 'year'), all.x=TRUE) 
+
+  combine2010 = merge(clean2010, rm2010Fun[, c('plotId', 'siteId', 'year', 'minDate')], by = c('plotId', 'siteId', 'year'), all.x=TRUE) 
+
+```
 
 
 ```{r}
-( 
-  combine2001 = merge(clean2001, rm2001[, c('plot_id', 'site_id', 'year', 'minDate')], by = c('plot_id', 'site_id', 'year'), all.x=TRUE) 
-)
+combine2011 = merge(clean2011, rm2011Fun[, c('plotId', 'siteId', 'year', 'minDate')], by = c('plotId', 'siteId', 'year'), all.x=TRUE) 
+
+combine2012 = merge(clean2012, rm2012Fun[, c('plotId', 'siteId', 'year', 'minDate')], by = c('plotId', 'siteId', 'year'), all.x=TRUE) 
+
+combine2013 = merge(clean2013, rm2013Fun[, c('plotId', 'siteId', 'year', 'minDate')], by = c('plotId', 'siteId', 'year'), all.x=TRUE) 
+
+combine2014 = merge(clean2014, rm2014Fun[, c('plotId', 'siteId', 'year', 'minDate')], by = c('plotId', 'siteId', 'year'), all.x=TRUE) 
+
+combine2015 = merge(clean2015, rm2015Fun[, c('plotId', 'siteId', 'year', 'minDate')], by = c('plotId', 'siteId', 'year'), all.x=TRUE) 
 ```
-#### write to csv 
+
+```{r}
+combine2016 = merge(clean2016, rm2016Fun[, c('plotId', 'siteId', 'year', 'minDate')], by = c('plotId', 'siteId', 'year'), all.x=TRUE) 
+
+combine2017 = merge(clean2017, rm2017Fun[, c('plotId', 'siteId', 'year', 'minDate')], by = c('plotId', 'siteId', 'year'), all.x=TRUE) 
+
+combine2018 = merge(clean2018, rm2018Fun[, c('plotId', 'siteId', 'year', 'minDate')], by = c('plotId', 'siteId', 'year'), all.x=TRUE) 
+
+combine2019 = merge(clean2019, rm2019Fun[, c('plotId', 'siteId', 'year', 'minDate')], by = c('plotId', 'siteId', 'year'), all.x=TRUE) 
+
+combine2020 = merge(clean2020, rm2020Fun[, c('plotId', 'siteId', 'year', 'minDate')], by = c('plotId', 'siteId', 'year'), all.x=TRUE) 
+
+combine2023 = merge(clean2023, rm2023Fun[, c('plotId', 'siteId', 'year', 'minDate')], by = c('plotId', 'siteId', 'year'), all.x=TRUE) 
+```
+
+# write to csv 
 ```{r}
 write.csv(combine2001,file = "../outputs/era5Clean/combine2001.csv")
-```
- 
-
-
-### 2005
-```{r}
-( rm2005 = clean2005 %>%
-  arrange(id, tempDate) %>%
-  group_by(id) %>%
-  mutate(RollMean = zoo::rollmean(TempC, k = 5, fill = NA)) %>% 
-    filter(julianTemp>=200)  %>%
-    ungroup() %>%
-    filter(RollMean <=0) %>%
-    group_by(last_nm, plot_id, site_id, year) %>% # regroup by last name, plot id, and site id
-  #filter(site_id== "DFTB") %>%
-    arrange(julianTemp) %>% # sort by date of temp measures
-  mutate(julianTemp_diff = julianTemp - lag(julianTemp)) %>%
-  filter(julianTemp_diff >= 1) %>%
-  summarize(minDate = min(julianTemp),
-            meanDate = mean(julianTemp),
-            maxDate = max(julianTemp)) %>%
-    ungroup() %>%
-  dplyr::select(last_nm, plot_id, site_id, year, minDate) 
-    
-  )
-
-( distinct2005 = rm2005 %>% distinct(plot_id, site_id, year) )
-
-```
-
-```{r}
-( 
-  combine2005 = merge(clean2005, rm2005[, c('plot_id', 'site_id', 'year', 'minDate')], by = c('plot_id', 'site_id', 'year'), all.x=TRUE) 
-)
-```
-#### write to csv 
-```{r}
 write.csv(combine2005,file = "../outputs/era5Clean/combine2005.csv")
-```
-### 2006 
-**2006 is active only**
-```{r}
-( rm2006 = clean2006 %>%
-  arrange(id, tempDate) %>%
-  group_by(id) %>%
-  mutate(RollMean = zoo::rollmean(TempC, k = 5, fill = NA)) %>% 
-    filter(julianTemp>=200)  %>%
-    ungroup() %>%
-    filter(RollMean <=0) %>%
-    group_by(last_nm, plot_id, site_id, year) %>% # regroup by last name, plot id, and site id
-  #filter(site_id== "DFTB") %>%
-    arrange(julianTemp) %>% # sort by date of temp measures
-  mutate(julianTemp_diff = julianTemp - lag(julianTemp)) %>%
-  filter(julianTemp_diff >= 1) %>%
-  summarize(minDate = min(julianTemp),
-            meanDate = mean(julianTemp),
-            maxDate = max(julianTemp)) %>%
-    ungroup() %>%
-  dplyr::select(last_nm, plot_id, site_id, year, minDate) 
-    
-  )
-
-( distinct2006 = rm2006 %>% distinct(plot_id, site_id, year) )
-
-```
-
-```{r}
-( 
-  combine2006 = merge(clean2006, rm2006[, c('plot_id', 'site_id', 'year', 'minDate')], by = c('plot_id', 'site_id', 'year'), all.x=TRUE) 
-)
-```
-
-#### write to csv 
-```{r}
 write.csv(combine2006,file = "../outputs/era5Clean/combine2006.csv")
-```
-
-### 2007
-**2007 is active only**
-```{r}
-( rm2007 = clean2007 %>%
-  arrange(id, tempDate) %>%
-  group_by(id) %>%
-  mutate(RollMean = zoo::rollmean(TempC, k = 5, fill = NA)) %>% 
-    filter(julianTemp>=200)  %>%
-    ungroup() %>%
-    filter(RollMean <=0) %>%
-    group_by(last_nm, plot_id, site_id, year) %>% # regroup by last name, plot id, and site id
-  #filter(site_id== "DFTB") %>%
-    arrange(julianTemp) %>% # sort by date of temp measures
-  mutate(julianTemp_diff = julianTemp - lag(julianTemp)) %>%
-  filter(julianTemp_diff >= 1) %>%
-  summarize(minDate = min(julianTemp),
-            meanDate = mean(julianTemp),
-            maxDate = max(julianTemp)) %>%
-    ungroup() %>%
-  dplyr::select(last_nm, plot_id, site_id, year, minDate) 
-    
-  )
-
-( distinct2007 = rm2007 %>% distinct(plot_id, site_id, year) )
-
-```
-
-
-```{r}
-( 
-  combine2007 = merge(clean2007, rm2007[, c('plot_id', 'site_id', 'year', 'minDate')], by = c('plot_id', 'site_id', 'year'), all.x=TRUE) 
-)
-```
-
-#### write to csv 
-```{r}
 write.csv(combine2007,file = "../outputs/era5Clean/combine2007.csv")
-```
-
-### 2008
-```{r}
-( rm2008 = clean2008 %>%
-  arrange(id, tempDate) %>%
-  group_by(id) %>%
-  mutate(RollMean = zoo::rollmean(TempC, k = 5, fill = NA)) %>% 
-    filter(julianTemp>=200)  %>%
-    ungroup() %>%
-    filter(RollMean <=0) %>%
-    group_by(last_nm, plot_id, site_id, year) %>% # regroup by last name, plot id, and site id
-  #filter(site_id== "DFTB") %>%
-    arrange(julianTemp) %>% # sort by date of temp measures
-  mutate(julianTemp_diff = julianTemp - lag(julianTemp)) %>%
-  filter(julianTemp_diff >= 1) %>%
-  summarize(minDate = min(julianTemp),
-            meanDate = mean(julianTemp),
-            maxDate = max(julianTemp)) %>%
-    ungroup() %>%
-  dplyr::select(last_nm, plot_id, site_id, year, minDate) 
-    
-  )
-
-( distinct2008 = rm2008 %>% distinct(plot_id, site_id, year) )
-
-```
-
-
-
-```{r}
-( 
-  combine2008 = merge(clean2008, rm2008[, c('plot_id', 'site_id', 'year', 'minDate')], by = c('plot_id', 'site_id', 'year'), all.x=TRUE) 
-)
-```
-
-#### write to csv 
-```{r}
 write.csv(combine2008,file = "../outputs/era5Clean/combine2008.csv")
-```
-
-### 2009
-```{r}
-( rm2009 = clean2009 %>%
-  arrange(id, tempDate) %>%
-  group_by(id) %>%
-  mutate(RollMean = zoo::rollmean(TempC, k = 5, fill = NA)) %>% 
-    filter(julianTemp>=200)  %>%
-    ungroup() %>%
-    filter(RollMean <=0) %>%
-    group_by(last_nm, plot_id, site_id, year) %>% # regroup by last name, plot id, and site id
-  #filter(site_id== "DFTB") %>%
-    arrange(julianTemp) %>% # sort by date of temp measures
-  mutate(julianTemp_diff = julianTemp - lag(julianTemp)) %>%
-  filter(julianTemp_diff >= 1) %>%
-  summarize(minDate = min(julianTemp),
-            meanDate = mean(julianTemp),
-            maxDate = max(julianTemp)) %>%
-    ungroup() %>%
-  dplyr::select(last_nm, plot_id, site_id, year, minDate) 
-    
-  )
-
-( distinct2009 = rm2009 %>% distinct(plot_id, site_id, year) )
-
-```
-
-```{r}
-( 
-  combine2009 = merge(clean2009, rm2009[, c('plot_id', 'site_id', 'year', 'minDate')], by = c('plot_id', 'site_id', 'year'), all.x=TRUE) 
-)
-```
-
-#### write to csv 
-```{r}
 write.csv(combine2009,file = "../outputs/era5Clean/combine2009.csv")
-```
-
-
-### 2010
-```{r}
-( rm2010 = clean2010 %>%
-  arrange(id, tempDate) %>%
-  group_by(id) %>%
-  mutate(RollMean = zoo::rollmean(TempC, k = 5, fill = NA)) %>% 
-    filter(julianTemp>=200)  %>%
-    ungroup() %>%
-    filter(RollMean <=0) %>%
-    group_by(last_nm, plot_id, site_id, year) %>% # regroup by last name, plot id, and site id
-  #filter(site_id== "DFTB") %>%
-    arrange(julianTemp) %>% # sort by date of temp measures
-  mutate(julianTemp_diff = julianTemp - lag(julianTemp)) %>%
-  filter(julianTemp_diff >= 1) %>%
-  summarize(minDate = min(julianTemp),
-            meanDate = mean(julianTemp),
-            maxDate = max(julianTemp)) %>%
-    ungroup() %>%
-  dplyr::select(last_nm, plot_id, site_id, year, minDate) 
-    
-  )
-
-( distinct2010 = rm2010 %>% distinct(plot_id, site_id, year) )
-
-```
-
-```{r}
-( 
-  combine2010 = merge(clean2010, rm2010[, c('plot_id', 'site_id', 'year', 'minDate')], by = c('plot_id', 'site_id', 'year'), all.x=TRUE) 
-)
-```
-
-#### write to csv 
-```{r}
 write.csv(combine2010,file = "../outputs/era5Clean/combine2010.csv")
-```
-
-
-### 2011
-```{r}
-( rm2011 = clean2011 %>%
-  arrange(id, tempDate) %>%
-  group_by(id) %>%
-  mutate(RollMean = zoo::rollmean(TempC, k = 5, fill = NA)) %>% 
-    filter(julianTemp>=200)  %>%
-    ungroup() %>%
-    filter(RollMean <=0) %>%
-    group_by(last_nm, plot_id, site_id, year) %>% # regroup by last name, plot id, and site id
-  #filter(site_id== "DFTB") %>%
-    arrange(julianTemp) %>% # sort by date of temp measures
-  mutate(julianTemp_diff = julianTemp - lag(julianTemp)) %>%
-  filter(julianTemp_diff >= 1) %>%
-  summarize(minDate = min(julianTemp),
-            meanDate = mean(julianTemp),
-            maxDate = max(julianTemp)) %>%
-    ungroup() %>%
-  dplyr::select(last_nm, plot_id, site_id, year, minDate) 
-    
-  )
-
-( distinct2011 = rm2011 %>% distinct(plot_id, site_id, year) )
-
-```
-
-```{r}
-( 
-  combine2011 = merge(clean2011, rm2011[, c('plot_id', 'site_id', 'year', 'minDate')], by = c('plot_id', 'site_id', 'year'), all.x=TRUE) 
-)
-```
-
-#### write to csv 
-```{r}
 write.csv(combine2011,file = "../outputs/era5Clean/combine2011.csv")
-```
-
-
-### 2012
-```{r}
-( rm2012 = clean2012 %>%
-  arrange(id, tempDate) %>%
-  group_by(id) %>%
-  mutate(RollMean = zoo::rollmean(TempC, k = 5, fill = NA)) %>% 
-    filter(julianTemp>=200)  %>%
-    ungroup() %>%
-    filter(RollMean <=0) %>%
-    group_by(last_nm, plot_id, site_id, year) %>% # regroup by last name, plot id, and site id
-  #filter(site_id== "DFTB") %>%
-    arrange(julianTemp) %>% # sort by date of temp measures
-  mutate(julianTemp_diff = julianTemp - lag(julianTemp)) %>%
-  filter(julianTemp_diff >= 1) %>%
-  summarize(minDate = min(julianTemp),
-            meanDate = mean(julianTemp),
-            maxDate = max(julianTemp)) %>%
-    ungroup() %>%
-  dplyr::select(last_nm, plot_id, site_id, year, minDate) 
-    
-  )
-
-( distinct2012 = rm2012 %>% distinct(plot_id, site_id, year) )
-
-```
-
-```{r}
-( 
-  combine2012 = merge(clean2012, rm2012[, c('plot_id', 'site_id', 'year', 'minDate')], by = c('plot_id', 'site_id', 'year'), all.x=TRUE) 
-)
-```
-
-#### write to csv 
-```{r}
 write.csv(combine2012,file = "../outputs/era5Clean/combine2012.csv")
-```
-
-
-### 2013
-```{r}
-( rm2013 = clean2013 %>%
-  arrange(id, tempDate) %>%
-  group_by(id) %>%
-  mutate(RollMean = zoo::rollmean(TempC, k = 5, fill = NA)) %>% 
-    filter(julianTemp>=200)  %>%
-    ungroup() %>%
-    filter(RollMean <=0) %>%
-    group_by(last_nm, plot_id, site_id, year) %>% # regroup by last name, plot id, and site id
-  #filter(site_id== "DFTB") %>%
-    arrange(julianTemp) %>% # sort by date of temp measures
-  mutate(julianTemp_diff = julianTemp - lag(julianTemp)) %>%
-  filter(julianTemp_diff >= 1) %>%
-  summarize(minDate = min(julianTemp),
-            meanDate = mean(julianTemp),
-            maxDate = max(julianTemp)) %>%
-    ungroup() %>%
-  dplyr::select(last_nm, plot_id, site_id, year, minDate) 
-    
-  )
-
-( distinct2013 = rm2013 %>% distinct(plot_id, site_id, year) )
-
-```
-
-```{r}
-( 
-  combine2013 = merge(clean2013, rm2013[, c('plot_id', 'site_id', 'year', 'minDate')], by = c('plot_id', 'site_id', 'year'), all.x=TRUE) 
-)
-```
-
-#### write to csv 
-```{r}
 write.csv(combine2013,file = "../outputs/era5Clean/combine2013.csv")
-```
-
-### 2014
-```{r}
-( rm2014 = clean2014 %>%
-  arrange(id, tempDate) %>%
-  group_by(id) %>%
-  mutate(RollMean = zoo::rollmean(TempC, k = 5, fill = NA)) %>% 
-    filter(julianTemp>=200)  %>%
-    ungroup() %>%
-    filter(RollMean <=0) %>%
-    group_by(last_nm, plot_id, site_id, year) %>% # regroup by last name, plot id, and site id
-  #filter(site_id== "DFTB") %>%
-    arrange(julianTemp) %>% # sort by date of temp measures
-  mutate(julianTemp_diff = julianTemp - lag(julianTemp)) %>%
-  filter(julianTemp_diff >= 1) %>%
-  summarize(minDate = min(julianTemp),
-            meanDate = mean(julianTemp),
-            maxDate = max(julianTemp)) %>%
-    ungroup() %>%
-  dplyr::select(last_nm, plot_id, site_id, year, minDate) 
-    
-  )
-
-( distinct2014 = rm2014 %>% distinct(plot_id, site_id, year) )
-
-```
-
-```{r}
-( 
-  combine2014 = merge(clean2014, rm2014[, c('plot_id', 'site_id', 'year', 'minDate')], by = c('plot_id', 'site_id', 'year'), all.x=TRUE) 
-)
-```
-
-#### write to csv 
-```{r}
 write.csv(combine2014,file = "../outputs/era5Clean/combine2014.csv")
-```
-
-
-### 2015
-```{r}
-clean2015
-```
-```{r}
-( rm2015 = clean2015 %>%
-  arrange(id, tempDate) %>%
-  group_by(id) %>%
-  mutate(RollMean = zoo::rollmean(TempC, k = 5, fill = NA)) %>% 
-    filter(julianTemp>=200)  %>%
-    ungroup() %>%
-    filter(RollMean <=0) %>%
-    group_by(last_nm, plot_id, site_id, year) %>% # regroup by last name, plot id, and site id
-  #filter(site_id== "DFTB") %>%
-    arrange(julianTemp) %>% # sort by date of temp measures
-  mutate(julianTemp_diff = julianTemp - lag(julianTemp)) %>%
-  filter(julianTemp_diff >= 1) %>%
-  summarize(minDate = min(julianTemp),
-            meanDate = mean(julianTemp),
-            maxDate = max(julianTemp)) %>%
-    ungroup() %>%
-  dplyr::select(last_nm, plot_id, site_id, year, minDate) 
-    
-  )
-
-( distinct2015 = rm2015 %>% distinct(plot_id, site_id, year) )
-
-```
-
-```{r}
-( 
-  combine2015 = merge(clean2015, rm2015[, c('plot_id', 'site_id', 'year', 'minDate')], by = c('plot_id', 'site_id', 'year'), all.x=TRUE) 
-)
-```
-
-#### write to csv 
-```{r}
 write.csv(combine2015,file = "../outputs/era5Clean/combine2015.csv")
-```
-
-### 2016
-```{r}
-( rm2016 = clean2016 %>%
-  arrange(id, tempDate) %>%
-  group_by(id) %>%
-  mutate(RollMean = zoo::rollmean(TempC, k = 5, fill = NA)) %>% 
-    filter(julianTemp>=200)  %>%
-    ungroup() %>%
-    filter(RollMean <=0) %>%
-    group_by(last_nm, plot_id, site_id, year) %>% # regroup by last name, plot id, and site id
-  #filter(site_id== "DFTB") %>%
-    arrange(julianTemp) %>% # sort by date of temp measures
-  mutate(julianTemp_diff = julianTemp - lag(julianTemp)) %>%
-  filter(julianTemp_diff >= 1) %>%
-  summarize(minDate = min(julianTemp),
-            meanDate = mean(julianTemp),
-            maxDate = max(julianTemp)) %>%
-    ungroup() %>%
-  dplyr::select(last_nm, plot_id, site_id, year, minDate) 
-    
-  )
-
-( distinct2016 = rm2016 %>% distinct(plot_id, site_id, year) )
-
-```
-
-```{r}
-( 
-  combine2016 = merge(clean2016, rm2016[, c('plot_id', 'site_id', 'year', 'minDate')], by = c('plot_id', 'site_id', 'year'), all.x=TRUE) 
-)
-```
-
-#### write to csv 
-```{r}
 write.csv(combine2016,file = "../outputs/era5Clean/combine2016.csv")
-```
-
-### 2017
-```{r}
-( rm2017 = clean2017 %>%
-  arrange(id, tempDate) %>%
-  group_by(id) %>%
-  mutate(RollMean = zoo::rollmean(TempC, k = 5, fill = NA)) %>% 
-    filter(julianTemp>=200)  %>%
-    ungroup() %>%
-    filter(RollMean <=0) %>%
-    group_by(last_nm, plot_id, site_id, year) %>% # regroup by last name, plot id, and site id
-  #filter(site_id== "DFTB") %>%
-    arrange(julianTemp) %>% # sort by date of temp measures
-  mutate(julianTemp_diff = julianTemp - lag(julianTemp)) %>%
-  filter(julianTemp_diff >= 1) %>%
-  summarize(minDate = min(julianTemp),
-            meanDate = mean(julianTemp),
-            maxDate = max(julianTemp)) %>%
-    ungroup() %>%
-  dplyr::select(last_nm, plot_id, site_id, year, minDate) 
-    
-  )
-
-( distinct2017 = rm2017 %>% distinct(plot_id, site_id, year) )
-
-```
-
-```{r}
-( 
-  combine2017 = merge(clean2017, rm2017[, c('plot_id', 'site_id', 'year', 'minDate')], by = c('plot_id', 'site_id', 'year'), all.x=TRUE) 
-)
-```
-
-#### write to csv 
-```{r}
 write.csv(combine2017,file = "../outputs/era5Clean/combine2017.csv")
-```
-
-### 2018
-```{r}
-( rm2018 = clean2018 %>%
-  arrange(id, tempDate) %>%
-  group_by(id) %>%
-  mutate(RollMean = zoo::rollmean(TempC, k = 5, fill = NA)) %>% 
-    filter(julianTemp>=200)  %>%
-    ungroup() %>%
-    filter(RollMean <=0) %>%
-    group_by(last_nm, plot_id, site_id, year) %>% # regroup by last name, plot id, and site id
-  #filter(site_id== "DFTB") %>%
-    arrange(julianTemp) %>% # sort by date of temp measures
-  mutate(julianTemp_diff = julianTemp - lag(julianTemp)) %>%
-  filter(julianTemp_diff >= 1) %>%
-  summarize(minDate = min(julianTemp),
-            meanDate = mean(julianTemp),
-            maxDate = max(julianTemp)) %>%
-    ungroup() %>%
-  dplyr::select(last_nm, plot_id, site_id, year, minDate) 
-    
-  )
-
-( distinct2018 = rm2018 %>% distinct(plot_id, site_id, year) )
-
-```
-
-```{r}
-( 
-  combine2018 = merge(clean2018, rm2018[, c('plot_id', 'site_id', 'year', 'minDate')], by = c('plot_id', 'site_id', 'year'), all.x=TRUE) 
-)
-```
-
-#### write to csv 
-```{r}
 write.csv(combine2018,file = "../outputs/era5Clean/combine2018.csv")
-```
-
-### 2019
-```{r}
-( rm2019 = clean2019 %>%
-  arrange(id, tempDate) %>%
-  group_by(id) %>%
-  mutate(RollMean = zoo::rollmean(TempC, k = 5, fill = NA)) %>% 
-    filter(julianTemp>=200)  %>%
-    ungroup() %>%
-    filter(RollMean <=0) %>%
-    group_by(last_nm, plot_id, site_id, year) %>% # regroup by last name, plot id, and site id
-  #filter(site_id== "DFTB") %>%
-    arrange(julianTemp) %>% # sort by date of temp measures
-  mutate(julianTemp_diff = julianTemp - lag(julianTemp)) %>%
-  filter(julianTemp_diff >= 1) %>%
-  summarize(minDate = min(julianTemp),
-            meanDate = mean(julianTemp),
-            maxDate = max(julianTemp)) %>%
-    ungroup() %>%
-  dplyr::select(last_nm, plot_id, site_id, year, minDate) 
-    
-  )
-
-( distinct2019 = rm2019 %>% distinct(plot_id, site_id, year) )
-
-```
-
-```{r}
-( 
-  combine2019 = merge(clean2019, rm2019[, c('plot_id', 'site_id', 'year', 'minDate')], by = c('plot_id', 'site_id', 'year'), all.x=TRUE) 
-)
-```
-
-#### write to csv 
-```{r}
 write.csv(combine2019,file = "../outputs/era5Clean/combine2019.csv")
-```
-
-### 2020
-```{r}
-( rm2020 = clean2020 %>%
-  arrange(id, tempDate) %>%
-  group_by(id) %>%
-  mutate(RollMean = zoo::rollmean(TempC, k = 5, fill = NA)) %>% 
-    filter(julianTemp>=200)  %>%
-    ungroup() %>%
-    filter(RollMean <=0) %>%
-    group_by(last_nm, plot_id, site_id, year) %>% # regroup by last name, plot id, and site id
-  #filter(site_id== "DFTB") %>%
-    arrange(julianTemp) %>% # sort by date of temp measures
-  mutate(julianTemp_diff = julianTemp - lag(julianTemp)) %>%
-  filter(julianTemp_diff >= 1) %>%
-  summarize(minDate = min(julianTemp),
-            meanDate = mean(julianTemp),
-            maxDate = max(julianTemp)) %>%
-    ungroup() %>%
-  dplyr::select(last_nm, plot_id, site_id, year, minDate) 
-    
-  )
-
-( distinct2020 = rm2020 %>% distinct(plot_id, site_id, year) )
-
-```
-
-```{r}
-( 
-  combine2020 = merge(clean2020, rm2020[, c('plot_id', 'site_id', 'year', 'minDate')], by = c('plot_id', 'site_id', 'year'), all.x=TRUE) 
-)
-```
-
-#### write to csv 
-```{r}
 write.csv(combine2020,file = "../outputs/era5Clean/combine2020.csv")
+write.csv(combine2023,file = "../outputs/era5Clean/combine2023.csv")
 ```
 
 # Bind clean 
@@ -985,69 +376,9 @@ combineAll = dplyr::bind_rows(combine2001, combine2005, combine2006, combine2007
 )
 ```
 
-
-
-# write to csv
-
-
+## write to csv
 ```{r eval=FALSE, include=FALSE}
 write.csv(combineAll,file = "../outputs/era5Clean/ERA5CombineAll.csv")
-```
-
-
-
-# DELETE
-```{r eval=FALSE, include=FALSE}
-( 
-distinct = dplyr::bind_rows(distinct2001, distinct2005, distinct2008, distinct2009, distinct2010, distinct2011, distinct2012, distinct2013, distinct2014, distinct2015, distinct2016, distinct2017, distinct2018, distinct2019, distinct2020)
-)
-```
-
-```{r eval=FALSE, include=FALSE}
-( 
-  summarizeDistinct = distinct %>%
-  group_by(plot_id, site_id, year) %>%
-  summarise( mean_Julian = mean(julianTemp),
-             mean_goal2 = mean(Goal2),
-             min_goal2 = min(Goal2),
-             max_goal2 = max(Goal2)) %>%
-  arrange(min_goal2) 
-  
-)
-  
-```
-
-```{r eval=FALSE, include=FALSE}
-summarizeDistinct %>% 
-  group_by(plot_id, site_id) %>%
-  mutate(KEEP = any(min_goal2 == max_goal2)) %>% 
-  filter(KEEP == FALSE)
-```
-
-```{r eval=FALSE, include=FALSE}
-unique(distinct$plot_id) 
-```
-
-# add standard active layer thickness date column
-```{r eval=FALSE, include=FALSE}
-( StdDate2001 = clean2001 %>%
-  mutate(stdDateAlt = 282-14)
-)
-```
-
-Make dataframe of distinct potential dates for standardizing by plot, site, name, and year
-
-```{r eval=FALSE, include=FALSE}
-StdDate2005 = clean2005 %>% mutate(stdDateAlt = 273-14)
-StdDate2008 = clean2008 %>% mutate(stdDateAlt = 253-14)
-StdDate2009 = clean2009 %>% mutate(stdDateAlt = 262-14)
-StdDate2010 = clean2010 %>% mutate(stdDateAlt = 265-14)
-StdDate2011 = clean2011 %>% mutate(stdDateAlt = 302-14)
-```
-
-**What if the standardization date is before the measure date??**
-```{r eval=FALSE, include=FALSE}
-StdDate2012 = clean2012 %>% mutate(stdDateAlt = 253-14)
 ```
 
 
