@@ -107,12 +107,12 @@ datacube %>% group_by(lastNm, cntryId, biome) %>%
 # Counts
 ```{r}
 data %>% group_by(cntryId, biome, siteId, lastNm) %>%
-  summarize(n=n())
+  tally()
 ```
 
 ```{r}
 data %>% group_by(cntryId, biome,  plotId, siteId, lastNm) %>%
-  summarize(n=n())
+  summarise(n=n())
 ```
 
 ```{r}
