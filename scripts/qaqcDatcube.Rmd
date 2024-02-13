@@ -32,6 +32,10 @@ datacube = read_csv("../data/dataCube/PermafrostFireDataCube.csv")
 datacube
 ```
 
+```{r}
+datacubePred = read_csv("../data/dataCube/DatacubePermafrostFirePredicted.csv")
+```
+
 # Existing NAs
 
 ## Check missing DOY
@@ -129,3 +133,7 @@ data %>% group_by(lastNm ) %>%
 data %>% filter(lastNm=="Schulze")
 ```
 
+# Predicted Data
+```{r}
+datacubePred
+```
