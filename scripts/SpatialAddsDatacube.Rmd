@@ -87,6 +87,11 @@ unique(tunBorWwf$BIOME)
 ```{r}
 wwfPt = st_join(datacubePts, tunBorWwf) 
 ```
+
+```{r}
+names(wwfPt)
+```
+
 ```{r eval=FALSE, include=FALSE}
 st_write(wwfPt, "../outputs/spatialDataCreate/PermafrostFireEcozoneDatacube.shp", driver="ESRI Shapefile")
 ```
