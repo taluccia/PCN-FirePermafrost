@@ -1,0 +1,948 @@
+---
+title: "PredictALT"
+author: "Anna Talucci"
+date: "2024-02-13"
+output: html_document
+---
+
+# clear environment
+```{r}
+rm(list=ls())
+```
+
+# Overview
+Take field measure active layer depth and predict maximum depth based on air temperature.
+
+# Packages
+
+```{r}
+library(tidyverse)
+library(lubridate)
+library(sf)
+```
+
+# Data
+
+```{r}
+data = read_csv("../data/dataCube/DatacubePermafrostFireERA5.csv")
+```
+
+```{r}
+glimpse(data)
+```
+
+
+# Functions to standarize
+Formula Parts 
+A. Take the square root of the Sum of the total degrees above zero for dates prior to thaw depth measure
+B. Take the square root of the Sum of the total degrees above zero for dates prior to active layer thickness date ()
+
+C. Divide B by A
+F. Multiply thaw depth measure by C
+
+```{r}
+calc_A = function(x) {
+  x %>% 
+    group_by(year, id, msrDOY) %>%
+    filter(TempDoy < msrDOY) %>%
+  filter(TempC > 0) %>%
+    arrange(TempDoy) %>%
+  summarize( 
+  A_sum = sum(TempC),
+  A = sqrt(A_sum)) -> x
+  return(x)
+}
+
+```
+
+**Change Date Depending on geographic location**
+```{r}
+
+calc_B = function(x) {
+  x %>% 
+    group_by(year, id, msrDOY) %>%
+    filter(TempDoy < altDate) %>%
+  filter(TempC > 0) %>%
+    arrange(TempDoy) %>%
+  summarize( 
+  B_sum = sum(TempC),
+  B = sqrt(B_sum)) -> x
+  return(x)
+ }
+```
+
+
+
+### Calculate A & B
+```{r}
+( calc_A_data = calc_A(data) )
+```
+
+```{r}
+( calc_B_data = calc_B(data) )
+```
+
+### Filter original data 
+```{r}
+( 
+  orgData = data %>% 
+  dplyr::select(plotId:altDate) %>%
+  group_by(year, id) %>%
+  slice(1)
+)
+```
+
+### Join Calculations with Orginial
+```{r}
+( dataCombine = orgData %>% 
+    full_join(y=calc_A_data, by=c("year", "id", 'msrDOY')) %>%
+    full_join(y=calc_B_data, by=c("year", "id", 'msrDOY')) %>%
+    mutate(C = B/A) %>%
+    mutate(AdjALT = round((msrDepth*C), 0)) 
+)
+```
+
+### Check NAs
+```{r}
+dataCombine %>% filter_at(vars(A_sum, A, B_sum, B, C, AdjALT), all_vars(is.na(.)))
+```
+
+```{r}
+write.csv(dataCombine, file = "../outputs/dataCube/DatacubePermafrostFirePredicted.csv")
+```
+
+---------------------------------------------------------------------
+-----------------------------DELETE-----------------------------------
+## Old version
+```{r}
+f <- list.files(path = "../data/era5Clean/",
+                pattern = "*.csv", full.names = TRUE)
+```
+
+```{r}
+f
+```
+
+## Individual files
+```{r}
+f2001 <- read_csv(f[18]) %>% filter(thw_ctv=="thaw") %>% mutate(altDate=minDate-14)
+f2005 <- read_csv(f[19]) %>% filter(thw_ctv=="thaw") %>% mutate(altDate=minDate-14)
+f2006 <- read_csv(f[20]) %>% filter(thw_ctv=="thaw") %>% mutate(altDate=minDate-14) 
+f2007 <- read_csv(f[21]) %>% filter(thw_ctv=="thaw") %>% mutate(altDate=minDate-14) 
+f2008 <- read_csv(f[22]) %>% filter(thw_ctv=="thaw") %>% mutate(altDate=minDate-14) 
+f2009 <- read_csv(f[23]) %>% filter(thw_ctv=="thaw") %>% mutate(altDate=minDate-14) 
+f2010 <- read_csv(f[24]) %>% filter(thw_ctv=="thaw") %>% mutate(altDate=minDate-14) 
+f2011 <- read_csv(f[25]) %>% filter(thw_ctv=="thaw") %>% mutate(altDate=minDate-14) 
+f2012 <- read_csv(f[26]) %>% filter(thw_ctv=="thaw") %>% mutate(altDate=minDate-14)
+f2013 <- read_csv(f[27]) %>% filter(thw_ctv=="thaw") %>% mutate(altDate=minDate-14)
+f2014 <- read_csv(f[28]) %>% filter(thw_ctv=="thaw") %>% mutate(altDate=minDate-14)
+f2015 <- read_csv(f[29]) %>% filter(thw_ctv=="thaw") %>% mutate(altDate=minDate-14)
+f2016 <- read_csv(f[30]) %>% filter(thw_ctv=="thaw") %>% mutate(altDate=minDate-14) 
+f2017 <- read_csv(f[31]) %>% filter(thw_ctv=="thaw") %>% mutate(altDate=minDate-14)
+f2018 <- read_csv(f[32]) %>% filter(thw_ctv=="thaw") %>% mutate(altDate=minDate-14) 
+f2019 <- read_csv(f[33]) %>% filter(thw_ctv=="thaw") %>% mutate(altDate=minDate-14)
+f2020 <- read_csv(f[34]) %>% filter(thw_ctv=="thaw") %>% mutate(altDate=minDate-14)
+```
+
+
+# Functions to standarize
+Formula Parts 
+A. Take the square root of the Sum of the total degrees above zero for dates prior to thaw depth measure
+B. Take the square root of the Sum of the total degrees above zero for dates prior to active layer thickness date ()
+
+C. Divide B by A
+F. Multiply thaw depth measure by C
+
+```{r}
+calc_A = function(x) {
+  x %>% 
+    group_by(id, julinDt) %>%
+    filter(julianTemp < julinDt) %>%
+  filter(TempC > 0) %>%
+    arrange(julianTemp) %>%
+  summarize( 
+  A_sum = sum(TempC),
+  A = sqrt(A_sum)) -> x
+  return(x)
+}
+
+```
+
+**Change Date Depending on geographic location**
+```{r}
+
+calc_B = function(x) {
+  x %>% 
+    group_by(id, julinDt) %>%
+    filter(julianTemp < altDate) %>%
+  filter(TempC > 0) %>%
+    arrange(julianTemp) %>%
+  summarize( 
+  B_sum = sum(TempC),
+  B = sqrt(B_sum)) -> x
+  return(x)
+ }
+```
+
+```{r}
+funs <- c(calc_A = calc_A, calc_B = calc_B)
+```
+
+## Use purrr????
+```{r eval=FALSE, include=FALSE}
+n2001 = f2001 %>% group_by(id) %>% nest() %>%
+( calc_2001 = n2001 %>% mutate(A_calc = map(calc_A))  %>% mutate(B_calc = map(calc_B)) ) 
+```
+
+
+
+# By Year
+
+## 2001
+### Checking some things
+A. Take the square root of the Sum of the total degrees above zero for dates prior to thaw depth measure
+```{r}
+f2001
+f2001 %>% 
+  group_by(id) %>%
+  filter_at(vars(TempC, julianTemp, julinDt), all_vars(is.na(.)))
+
+f2001 %>% 
+    group_by(id) %>%
+    filter(julianTemp < julinDt)
+
+length(unique(f2001$id))
+```
+### Calculate A & B
+```{r}
+( calc_A_2001 = calc_A(f2001) )
+```
+
+```{r}
+( calc_B_2001 = calc_B(f2001) )
+```
+
+### Filter original data 
+```{r}
+( 
+  orgf2001 = f2001 %>% 
+  dplyr::select(id, plot_id:cntry_c, day:id) %>%
+  group_by(id) %>%
+  slice(1)
+)
+```
+
+### Join Calculations with Orginial
+```{r}
+( data2001 = orgf2001 %>% 
+    full_join(y=calc_A_2001, by=c("id", 'julinDt')) %>%
+    full_join(y=calc_B_2001, by=c("id", 'julinDt')) %>%
+    mutate(C = B/A) %>%
+    mutate(AdjALT = round((thw_dpt*C), 0)) 
+)
+```
+### Check NAs
+```{r}
+data2001 %>% filter_at(vars(A_sum, A, B_sum, B, C, AdjALT), all_vars(is.na(.)))
+```
+
+## 2005
+### Checking some things
+A. Take the square root of the Sum of the total degrees above zero for dates prior to thaw depth measure
+```{r}
+f2005
+f2005 %>% 
+  group_by(id) %>%
+  filter_at(vars(TempC, julianTemp, julinDt), all_vars(is.na(.)))
+
+f2005 %>% 
+    group_by(id) %>%
+    filter(julianTemp < julinDt)
+
+length(unique(f2005$id))
+length(unique(f2005$last_nm))
+```
+### Calculate A & B
+```{r}
+( calc_A_2005 = calc_A(f2005) )
+```
+
+```{r}
+( calc_B_2005 = calc_B(f2005) )
+```
+
+### Filter original data 
+```{r}
+( 
+  orgf2005 = f2005 %>% 
+  dplyr::select(id, plot_id:cntry_c, day:id) %>%
+  group_by(id) %>%
+  slice(1)
+)
+```
+
+### Join Calculations with Orginial
+```{r}
+( data2005 = orgf2005 %>% 
+    full_join(y=calc_A_2005, by=c("id", "julinDt")) %>%
+    full_join(y=calc_B_2005, by=c("id", "julinDt")) %>%
+    mutate(C = B/A) %>%
+    mutate(AdjALT = round((thw_dpt*C), 0)) %>%
+    mutate(plot_id = as.character(plot_id))
+)
+```
+### Check NAs
+```{r}
+data2005 %>% filter_at(vars(A_sum, A, B_sum, B, C, AdjALT), all_vars(is.na(.)))
+```
+
+## 2008
+### Checking some things
+A. Take the square root of the Sum of the total degrees above zero for dates prior to thaw depth measure
+```{r}
+f2008
+f2008 %>% 
+  group_by(id) %>%
+  filter_at(vars(TempC, julianTemp, julinDt), all_vars(is.na(.)))
+
+f2008 %>% 
+    group_by(id) %>%
+    filter(julianTemp < julinDt)
+
+length(unique(f2008$id))
+length(unique(f2008$last_nm))
+```
+### Calculate A & B
+```{r}
+( calc_A_2008 = calc_A(f2008) )
+```
+
+```{r}
+( calc_B_2008 = calc_B(f2008) )
+```
+
+### Filter original data 
+```{r}
+( 
+  orgf2008 = f2008 %>% 
+  dplyr::select(id, plot_id:cntry_c, day:id) %>%
+  group_by(id) %>%
+  slice(1)
+)
+```
+
+### Join Calculations with Orginial
+```{r}
+( data2008 = orgf2008 %>% 
+    full_join(y=calc_A_2008, by=c("id", "julinDt")) %>%
+    full_join(y=calc_B_2008, by=c("id", "julinDt")) %>%
+    mutate(C = B/A) %>%
+    mutate(AdjALT = round((thw_dpt*C), 0))
+)
+```
+### Check NAs
+```{r}
+data2008 %>% filter_at(vars(A_sum, A, B_sum, B, C, AdjALT), all_vars(is.na(.)))
+```
+
+## 2009
+### Checking some things
+A. Take the square root of the Sum of the total degrees above zero for dates prior to thaw depth measure
+```{r}
+f2009
+f2009 %>% 
+  group_by(id) %>%
+  filter_at(vars(TempC, julianTemp, julinDt), all_vars(is.na(.)))
+
+f2009 %>% 
+    group_by(id) %>%
+    filter(julianTemp < julinDt)
+
+length(unique(f2009$id))
+length(unique(f2009$last_nm))
+```
+### Calculate A & B
+```{r}
+( calc_A_2009 = calc_A(f2009) )
+```
+
+```{r}
+( calc_B_2009 = calc_B(f2009) )
+```
+
+### Filter original data 
+```{r}
+( 
+  orgf2009 = f2009 %>% 
+  dplyr::select(id, plot_id:cntry_c, day:id) %>%
+  group_by(id) %>%
+  slice(1)
+)
+```
+
+### Join Calculations with Orginial
+```{r}
+( data2009 = orgf2009 %>% 
+    full_join(y=calc_A_2009, by=c("id", "julinDt")) %>%
+    full_join(y=calc_B_2009, by=c("id", "julinDt")) %>%
+    mutate(C = B/A) %>%
+    mutate(AdjALT = round((thw_dpt*C), 0))
+)
+```
+### Check NAs
+```{r}
+data2009 %>% filter_at(vars(A_sum, A, B_sum, B, C, AdjALT), all_vars(is.na(.)))
+```
+
+## 2010
+### Checking some things
+A. Take the square root of the Sum of the total degrees above zero for dates prior to thaw depth measure
+```{r}
+f2010
+f2010 %>% 
+  group_by(id) %>%
+  filter_at(vars(TempC, julianTemp, julinDt), all_vars(is.na(.)))
+
+f2010 %>% 
+    group_by(id) %>%
+    filter(julianTemp < julinDt)
+
+length(unique(f2010$id))
+length(unique(f2010$last_nm))
+```
+### Calculate A & B
+```{r}
+( calc_A_2010 = calc_A(f2010) )
+```
+
+```{r}
+( calc_B_2010 = calc_B(f2010) )
+```
+
+### Filter original data 
+```{r}
+( 
+  orgf2010 = f2010 %>% 
+  dplyr::select(id, plot_id:cntry_c, day:id) %>%
+  group_by(id) %>%
+  slice(1)
+)
+```
+
+### Join Calculations with Orginial
+```{r}
+( data2010 = orgf2010 %>% 
+    full_join(y=calc_A_2010, by=c("id", "julinDt")) %>%
+    full_join(y=calc_B_2010, by=c("id", "julinDt")) %>%
+    mutate(C = B/A) %>%
+    mutate(AdjALT = round((thw_dpt*C), 0))
+)
+```
+### Check NAs
+```{r}
+data2010 %>% filter_at(vars(A_sum, A, B_sum, B, C, AdjALT), all_vars(is.na(.)))
+```
+
+## 2011
+### Checking some things
+A. Take the square root of the Sum of the total degrees above zero for dates prior to thaw depth measure
+```{r}
+f2011
+f2011 %>% 
+  group_by(id) %>%
+  filter_at(vars(TempC, julianTemp, julinDt), all_vars(is.na(.)))
+
+f2011 %>% 
+    group_by(id) %>%
+    filter(julianTemp < julinDt)
+
+length(unique(f2011$id))
+length(unique(f2011$last_nm))
+```
+### Calculate A & B
+```{r}
+( calc_A_2011 = calc_A(f2011) )
+```
+
+```{r}
+( calc_B_2011 = calc_B(f2011) )
+```
+
+### Filter original data 
+```{r}
+( 
+  orgf2011 = f2011 %>% 
+  dplyr::select(id, plot_id:cntry_c, day:id) %>%
+  group_by(id) %>%
+  slice(1)
+)
+```
+
+### Join Calculations with Orginial
+```{r}
+( data2011 = orgf2011 %>% 
+    full_join(y=calc_A_2011, by=c("id", "julinDt")) %>%
+    full_join(y=calc_B_2011, by=c("id", "julinDt")) %>%
+    mutate(C = B/A) %>%
+    mutate(AdjALT = round((thw_dpt*C), 0))
+)
+```
+### Check NAs
+```{r}
+data2011 %>% filter_at(vars(A_sum, A, B_sum, B, C, AdjALT), all_vars(is.na(.)))
+```
+
+
+## 2012
+### Checking some things
+A. Take the square root of the Sum of the total degrees above zero for dates prior to thaw depth measure
+```{r}
+f2012
+f2012 %>% 
+  group_by(id) %>%
+  filter_at(vars(TempC, julianTemp, julinDt), all_vars(is.na(.)))
+
+f2012 %>% 
+    group_by(id) %>%
+    filter(julianTemp < julinDt)
+
+length(unique(f2012$id))
+length(unique(f2012$last_nm))
+```
+### Calculate A & B
+```{r}
+( calc_A_2012 = calc_A(f2012) )
+```
+
+```{r}
+( calc_B_2012 = calc_B(f2012) )
+```
+
+### Filter original data 
+```{r}
+( 
+  orgf2012 = f2012 %>% 
+  dplyr::select(id, plot_id:cntry_c, day:id) %>%
+  group_by(id) %>%
+  slice(1)
+)
+```
+
+### Join Calculations with Orginial
+```{r}
+( data2012 = orgf2012 %>% 
+    full_join(y=calc_A_2012, by=c("id", "julinDt")) %>%
+    full_join(y=calc_B_2012, by=c("id", "julinDt")) %>%
+    mutate(C = B/A) %>%
+    mutate(AdjALT = round((thw_dpt*C), 0))
+)
+```
+### Check NAs
+```{r}
+data2012 %>% filter_at(vars(A_sum, A, B_sum, B, C, AdjALT), all_vars(is.na(.)))
+```
+
+## 2013
+### Checking some things
+A. Take the square root of the Sum of the total degrees above zero for dates prior to thaw depth measure
+```{r}
+f2013
+f2013 %>% 
+  group_by(id) %>%
+  filter_at(vars(TempC, julianTemp, julinDt), all_vars(is.na(.)))
+
+f2013 %>% 
+    group_by(id) %>%
+    filter(julianTemp < julinDt)
+
+length(unique(f2013$id))
+length(unique(f2013$last_nm))
+```
+### Calculate A & B
+```{r}
+( calc_A_2013 = calc_A(f2013) )
+```
+
+```{r}
+( calc_B_2013 = calc_B(f2013) )
+```
+
+### Filter original data 
+```{r}
+( 
+  orgf2013 = f2013 %>% 
+  dplyr::select(id, plot_id:cntry_c, day:id) %>%
+  group_by(id) %>%
+  slice(1)
+)
+```
+
+### Join Calculations with Orginial
+```{r}
+( data2013 = orgf2013 %>% 
+    full_join(y=calc_A_2013, by=c("id", "julinDt")) %>%
+    full_join(y=calc_B_2013, by=c("id", "julinDt")) %>%
+    mutate(C = B/A) %>%
+    mutate(AdjALT = round((thw_dpt*C), 0))
+)
+```
+### Check NAs
+```{r}
+data2013 %>% filter_at(vars(A_sum, A, B_sum, B, C, AdjALT), all_vars(is.na(.)))
+```
+
+## 2014
+### Checking some things
+A. Take the square root of the Sum of the total degrees above zero for dates prior to thaw depth measure
+```{r}
+f2014
+f2014 %>% 
+  group_by(id) %>%
+  filter_at(vars(TempC, julianTemp, julinDt), all_vars(is.na(.)))
+
+f2014 %>% 
+    group_by(id) %>%
+    filter(julianTemp < julinDt)
+
+length(unique(f2014$id))
+length(unique(f2014$last_nm))
+```
+### Calculate A & B
+```{r}
+( calc_A_2014 = calc_A(f2014) )
+```
+
+```{r}
+( calc_B_2014 = calc_B(f2014) )
+```
+
+### Filter original data 
+```{r}
+( 
+  orgf2014 = f2014 %>% 
+  dplyr::select(id, plot_id:cntry_c, day:id) %>%
+  group_by(id) %>%
+  slice(1)
+)
+```
+
+### Join Calculations with Orginial
+```{r}
+( data2014 = orgf2014 %>% 
+    full_join(y=calc_A_2014, by=c("id", "julinDt")) %>%
+    full_join(y=calc_B_2014, by=c("id", "julinDt")) %>%
+    mutate(C = B/A) %>%
+    mutate(AdjALT = round((thw_dpt*C), 0))
+)
+```
+### Check NAs
+```{r}
+data2014 %>% filter_at(vars(A_sum, A, B_sum, B, C, AdjALT), all_vars(is.na(.)))
+```
+
+
+
+## 2015
+### Checking some things
+A. Take the square root of the Sum of the total degrees above zero for dates prior to thaw depth measure
+```{r}
+f2015
+f2015 %>% 
+  group_by(id) %>%
+  filter_at(vars(TempC, julianTemp, julinDt), all_vars(is.na(.)))
+
+f2015 %>% 
+    group_by(id) %>%
+    filter(julianTemp < julinDt)
+
+length(unique(f2015$id))
+length(unique(f2015$last_nm))
+```
+### Calculate A & B
+```{r}
+( calc_A_2015 = calc_A(f2015) )
+```
+
+```{r}
+( calc_B_2015 = calc_B(f2015) )
+```
+
+### Filter original data 
+```{r}
+( 
+  orgf2015 = f2015 %>% 
+  dplyr::select(id, plot_id:cntry_c, day:id) %>%
+  group_by(id) %>%
+  slice(1)
+)
+```
+
+### Join Calculations with Orginial
+```{r}
+( data2015 = orgf2015 %>% 
+    full_join(y=calc_A_2015, by=c("id", "julinDt")) %>%
+    full_join(y=calc_B_2015, by=c("id", "julinDt")) %>%
+    mutate(C = B/A) %>%
+    mutate(AdjALT = round((thw_dpt*C), 0))
+)
+```
+### Check NAs
+```{r}
+data2015 %>% filter_at(vars(A_sum, A, B_sum, B, C, AdjALT), all_vars(is.na(.)))
+```
+
+## 2016
+### Checking some things
+A. Take the square root of the Sum of the total degrees above zero for dates prior to thaw depth measure
+```{r}
+f2016
+f2016 %>% 
+  group_by(id) %>%
+  filter_at(vars(TempC, julianTemp, julinDt), all_vars(is.na(.)))
+
+f2016 %>% 
+    group_by(id) %>%
+    filter(julianTemp < julinDt)
+
+length(unique(f2016$id))
+length(unique(f2016$last_nm))
+```
+### Calculate A & B
+```{r}
+( calc_A_2016 = calc_A(f2016) )
+```
+
+```{r}
+( calc_B_2016 = calc_B(f2016) )
+```
+
+### Filter original data 
+```{r}
+( 
+  orgf2016 = f2016 %>% 
+  dplyr::select(id, plot_id:cntry_c, day:id) %>%
+  group_by(id) %>%
+  slice(1)
+)
+```
+
+### Join Calculations with Orginial
+```{r}
+( data2016 = orgf2016 %>% 
+    full_join(y=calc_A_2016, by=c("id", "julinDt")) %>%
+    full_join(y=calc_B_2016, by=c("id", "julinDt")) %>%
+    mutate(C = B/A) %>%
+    mutate(AdjALT = round((thw_dpt*C), 0))
+)
+```
+### Check NAs
+```{r}
+data2016 %>% filter_at(vars(A_sum, A, B_sum, B, C, AdjALT), all_vars(is.na(.)))
+```
+
+## 2017
+### Checking some things
+A. Take the square root of the Sum of the total degrees above zero for dates prior to thaw depth measure
+```{r}
+f2017
+f2017 %>% 
+  group_by(id) %>%
+  filter_at(vars(TempC, julianTemp, julinDt), all_vars(is.na(.)))
+
+f2017 %>% 
+    group_by(id) %>%
+    filter(julianTemp < julinDt)
+
+length(unique(f2017$id))
+length(unique(f2017$last_nm))
+```
+### Calculate A & B
+```{r}
+( calc_A_2017 = calc_A(f2017) )
+```
+
+```{r}
+( calc_B_2017 = calc_B(f2017) )
+```
+
+### Filter original data 
+```{r}
+( 
+  orgf2017 = f2017 %>% 
+  dplyr::select(id, plot_id:cntry_c, day:id) %>%
+  group_by(id) %>%
+  slice(1)
+)
+```
+
+### Join Calculations with Orginial
+```{r}
+( data2017 = orgf2017 %>% 
+    full_join(y=calc_A_2017, by=c("id", "julinDt")) %>%
+    full_join(y=calc_B_2017, by=c("id", "julinDt")) %>%
+    mutate(C = B/A) %>%
+    mutate(AdjALT = round((thw_dpt*C), 0))
+)
+```
+### Check NAs
+```{r}
+data2017 %>% filter_at(vars(A_sum, A, B_sum, B, C, AdjALT), all_vars(is.na(.)))
+```
+
+## 2018
+### Checking some things
+A. Take the square root of the Sum of the total degrees above zero for dates prior to thaw depth measure
+```{r}
+f2018
+f2018 %>% 
+  group_by(id) %>%
+  filter_at(vars(TempC, julianTemp, julinDt), all_vars(is.na(.)))
+
+f2018 %>% 
+    group_by(id) %>%
+    filter(julianTemp < julinDt)
+
+length(unique(f2018$id))
+length(unique(f2018$last_nm))
+```
+### Calculate A & B
+```{r}
+( calc_A_2018 = calc_A(f2018) )
+```
+
+```{r}
+( calc_B_2018 = calc_B(f2018) )
+```
+
+### Filter original data 
+```{r}
+( 
+  orgf2018 = f2018 %>% 
+  dplyr::select(id, plot_id:cntry_c, day:id) %>%
+  group_by(id) %>%
+  slice(1)
+)
+```
+
+### Join Calculations with Orginial
+```{r}
+( data2018 = orgf2018 %>% 
+    full_join(y=calc_A_2018, by=c("id", "julinDt")) %>%
+    full_join(y=calc_B_2018, by=c("id", "julinDt")) %>%
+    mutate(C = B/A) %>%
+    mutate(AdjALT = round((thw_dpt*C), 0))
+)
+```
+### Check NAs
+```{r}
+data2018 %>% filter_at(vars(A_sum, A, B_sum, B, C, AdjALT), all_vars(is.na(.)))
+```
+
+## 2019
+### Checking some things
+A. Take the square root of the Sum of the total degrees above zero for dates prior to thaw depth measure
+```{r}
+f2019
+f2019 %>% 
+  group_by(id) %>%
+  filter_at(vars(TempC, julianTemp, julinDt), all_vars(is.na(.)))
+
+f2019 %>% 
+    group_by(id) %>%
+    filter(julianTemp < julinDt)
+
+length(unique(f2019$id))
+length(unique(f2019$last_nm))
+```
+### Calculate A & B
+```{r}
+( calc_A_2019 = calc_A(f2019) )
+```
+
+```{r}
+( calc_B_2019 = calc_B(f2019) )
+```
+
+### Filter original data 
+```{r}
+( 
+  orgf2019 = f2019 %>% 
+  dplyr::select(id, plot_id:cntry_c, day:id) %>%
+  group_by(id) %>%
+  slice(1)
+)
+```
+
+### Join Calculations with Orginial
+```{r}
+( data2019 = orgf2019 %>% 
+    full_join(y=calc_A_2019, by=c("id", "julinDt")) %>%
+    full_join(y=calc_B_2019, by=c("id", "julinDt")) %>%
+    mutate(C = B/A) %>%
+    mutate(AdjALT = round((thw_dpt*C), 0))
+)
+```
+### Check NAs
+```{r}
+data2019 %>% filter_at(vars(A_sum, A, B_sum, B, C, AdjALT), all_vars(is.na(.)))
+```
+
+## 2020
+### Checking some things
+A. Take the square root of the Sum of the total degrees above zero for dates prior to thaw depth measure
+```{r}
+f2020
+f2020 %>% 
+  group_by(id) %>%
+  filter_at(vars(TempC, julianTemp, julinDt), all_vars(is.na(.)))
+
+f2020 %>% 
+    group_by(id) %>%
+    filter(julianTemp < julinDt)
+
+length(unique(f2020$id))
+length(unique(f2020$last_nm))
+```
+### Calculate A & B
+```{r}
+( calc_A_2020 = calc_A(f2020) )
+```
+
+```{r}
+( calc_B_2020 = calc_B(f2020) )
+```
+
+### Filter original data 
+```{r}
+( 
+  orgf2020 = f2020 %>% 
+  dplyr::select(id, plot_id:cntry_c, day:id) %>%
+  group_by(id) %>%
+  slice(1)
+)
+```
+
+### Join Calculations with Orginial
+```{r}
+( data2020 = orgf2020 %>% 
+    full_join(y=calc_A_2020, by=c("id", "julinDt")) %>%
+    full_join(y=calc_B_2020, by=c("id", "julinDt")) %>%
+    mutate(C = B/A) %>%
+    mutate(AdjALT = round((thw_dpt*C), 0))
+)
+```
+### Check NAs
+```{r}
+data2020 %>% filter_at(vars(A_sum, A, B_sum, B, C, AdjALT), all_vars(is.na(.)))
+```
+
+# Combine standarized measures
+```{r}
+( 
+data = dplyr::bind_rows(data2001, data2005, data2008, data2009, data2010, data2011, data2012, data2013, data2014, data2015, data2016, data2017, data2018, data2019, data2020)
+)
+```
+
+```{r}
+write.csv(data,file = "../outputs/Standardize/ThawStandardizeALT.csv")
+```
