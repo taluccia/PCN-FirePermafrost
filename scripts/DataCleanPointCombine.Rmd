@@ -39,7 +39,7 @@ wgs_proj =  "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs "
 ## vector of data files
 original data in "../data/GoogleDriveCsvFolder/"
 ```{r}
-f <- list.files(path = "../data/GoogleDriveCsv2/",
+f <- list.files(path = "../data/GoogleDriveCsv20240212/",
                 pattern = "*.csv", full.names = TRUE)
 ```
 
@@ -507,7 +507,6 @@ f12 <- read.csv(f[12], header = TRUE)
 f12
 ```
 
-
 ```{r}
 # fix incorrect logical columns
 # organic depth is missing, but set to NA
@@ -848,9 +847,7 @@ f18_clean = clean(f18_dates)
 glimpse(f10_clean)
 ```
 
-```{r}
-unique(f1_clean$vegCvr)
-```
+
 # Combine into datacube
 
 ```{r}
@@ -870,44 +867,6 @@ colnames(dataCube)
 ```{r}
 write_csv(dataCube, '../outputs/dataCube/PermafrostFireDataCube.csv')
 ```
-
-# Check for NA
-show rows with na
-```{r}
-(allNa = dataCube %>% filter_all(any_vars(is.na(.))) )
-```
-
-```{r}
-( latNA = dataCube %>% filter(is.na(lat)) )
-unique(latNA$lastNm)
-```
-As of 1-31-2024 Natali missing 15 lat coordinates
-
-```{r}
-( lonNA = dataCube %>% filter(is.na(lon)) )
-unique(lonNA$lastNm)
-```
-As of 1-31-2024 Natali missing 24 lat coordinates
-```{r}
-(msrNA = dataCube %>% filter(is.na(msrDepth)) )
-unique(msrNA$lastNm)
-```
-
-```{r}
-(rocky = dataCube %>% filter(is.na(msrDepth)) %>% filter(hitRock=="y") )
-unique(rocky$lastNm)
-```
-
-```{r}
-(doyNA = dataCube %>% filter(is.na(msrDOY)) )
-(unique(doyNA$lastNm))
-```
-
-```{r}
-dataCube %>% filter(lastNm=="Schulze") 
-
-```
-
 
 # Create points shapefile
 
