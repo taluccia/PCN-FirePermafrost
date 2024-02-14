@@ -35,35 +35,32 @@ comp_theme = theme_bw() + theme(legend.position = "none") +
 
 # Data
 
-## Standardized measures
+## Predicted measurements
 ```{r}
-allDataALT = read_csv("../data/Standardize/AllDataStandardizeALTwithDates.csv")
+datacubePred = read_csv("../data/dataCube/DatacubePermafrostFirePredicted.csv")
 ```
 
 ```{r}
-allDataALT
+datacubePred
 ```
+
+# Remove
+
 ```{r}
-( example1 = allDataALT[1, ] )
-```
-# Select data
-```{r}
-( dataFig = allDataALT %>% 
-    dplyr::select(plot_id:site_id, cntry_c, thw_ctv, thw_dpt, AdjALT, julinDt, altDate, dateDiff, diffALT) %>% 
-    rename(dateMsr = julinDt, datePrd = altDate, dpthMsr = thw_dpt, dpthPrd=AdjALT, diffDate = dateDiff, diffDpth = diffALT))
+( datacubePred1 = datacubePred %>% filter(msrDepth < 1000) %>% drop_na(predDepth))
 ```
 
 # Filter and sampling
 
 ## Small sample for paired figure
 ```{r}
-( sampleActive = dataFig %>% 
-  filter(thw_ctv =="active") %>%
+( sampleActive = datacubePred %>% 
+  filter(msrType =="active") %>%
   slice_sample(n = 20) %>%
     mutate(paired = row_number()) %>%
-    dplyr::select(plot_id, site_id, paired, thw_ctv, dpthMsr, dpthPrd) %>%
+    dplyr::select(plotId, siteId, paired, msrType, msrDepth, predDepth) %>%
     pivot_longer(
-    cols = starts_with("dpth"),
+    cols = ends_with("Depth"),
     names_to = "msrPrd",
     values_to = "depth")
     
@@ -73,21 +70,21 @@ allDataALT
 
 ## Data for Date figure
 ```{r}
-( forDates = dataFig %>% 
-  dplyr::select(plot_id, site_id, thw_ctv, dateMsr, datePrd) %>%
+( forDates = datacubePred %>% 
+    dplyr::select(plotId, siteId, msrType, msrDOY, predDoy) %>%
     pivot_longer(
-    cols = starts_with("date"),
+    cols = ends_with("doy"),
     names_to = "msrPrd",
-    values_to = "date")
+    values_to = "DoY")
 )
 ```
 
 ## Data for depth figure
 ```{r}
-( forDepth = dataFig %>% 
-  dplyr::select(plot_id, site_id, thw_ctv, dpthMsr, dpthPrd) %>%
+( forDepth = datacubePred %>% 
+  dplyr::select(plotId, siteId, msrType, msrDepth, predDepth) %>%
     pivot_longer(
-    cols = starts_with("dpth"),
+    cols = ends_with("Depth"),
     names_to = "msrPrd",
     values_to = "depth")
 )
@@ -97,7 +94,7 @@ allDataALT
 # Summarize
 ```{r}
 forDates %>% 
-  group_by(thw_ctv, msrPrd) %>%
+  group_by(msrType, msrPrd) %>%
   summarise(mean= mean(date),
             sd = sd(date),
             min = min(date),
@@ -118,16 +115,16 @@ forDepth %>%
 ## Violin plot of date measured vs predicted
 ```{r}
 ( fig1 = forDates %>% 
-    filter(thw_ctv=="thaw") %>% 
+    filter(msrType=="thaw") %>% 
     mutate(msrPrd = fct_recode(msrPrd,
-                                  "Measured thaw" = "dateMsr",
-                                  "Predicted ALT" = "datePrd")) %>%
-ggplot(., aes(x = msrPrd, y=date)) +
+                                  "Measured DoY" = "msrDOY",
+                                  "Predicted DoY" = "predDoy")) %>%
+ggplot(., aes(x = msrPrd, y=DoY)) +
   geom_violin() + 
   
   geom_boxplot(width=0.1) +
   stat_summary(fun=mean, geom="point", shape=23, size=2, color="red") +
-  labs(x="", y="Julian Date") +
+  labs(x="", y="Day of year (DoY)") +
   comp_theme 
   
 )
@@ -135,17 +132,17 @@ ggplot(., aes(x = msrPrd, y=date)) +
 
 ```{r}
 ( fig2 = forDates %>% 
-    filter(thw_ctv=="active") %>% 
+    filter(msrType=="active") %>% 
     mutate(msrPrd = fct_recode(msrPrd,
-                                  "Measured active" = "dateMsr",
-                                  "Predicted ALT" = "datePrd")) %>%
-ggplot(., aes(x = msrPrd, y=date)) +
+                                  "Measured DoY" = "msrDOY",
+                                  "Predicted DoY" = "predDoy")) %>%
+ggplot(., aes(x = msrPrd, y=DoY)) +
   geom_violin() + 
   
   geom_boxplot(width=0.1) +
   stat_summary(fun=mean, geom="point", shape=23, size=2, color="red") +
   
-  labs(x="", y="Julian Date") +
+  labs(x="", y="Day of year (DoY)") +
   comp_theme 
 )
 ```
@@ -161,10 +158,10 @@ ggsave("../figures/DatesMeasurePredictViolin.png", plot = comboDates, width = 3,
 ## Violin plot of depth measured vs predicted
 ```{r}
 ( fig3 = forDepth %>% 
-    filter(thw_ctv=="thaw") %>% 
+    filter(msrType=="thaw") %>% 
     mutate(msrPrd = fct_recode(msrPrd,
-                                  "Measured thaw" = "dpthMsr",
-                                  "Predicted ALT" = "dpthPrd")) %>%
+                                  "Measured depth" = "msrDepth",
+                                  "Predicted depth" = "predDepth")) %>%
 ggplot(., aes(x = msrPrd, y=depth)) +
   geom_violin() + 
   
@@ -178,10 +175,10 @@ ggplot(., aes(x = msrPrd, y=depth)) +
 
 ```{r}
 ( fig4 = forDepth %>% 
-    filter(thw_ctv=="active") %>% 
+    filter(msrType=="active") %>% 
     mutate(msrPrd = fct_recode(msrPrd,
-                                  "Measured active" = "dpthMsr",
-                                  "Predicted ALT" = "dpthPrd")) %>%
+                                  "Measured depth" = "msrDepth",
+                                  "Predicted depth" = "predDepth")) %>%
 ggplot(., aes(x = msrPrd, y=depth)) +
   geom_violin() + 
   
@@ -202,10 +199,15 @@ comp_theme
 ggsave("../figures/DepthsMeasurePredictViolin.png", plot = comboDepths, width = 3, height =4, units = c("in"), dpi=600, bg = "white" )
 ```
 
+## Observed vs predicted
+
+```{r}
+ggplot(data=datacubePred1, aes(x=msrDepth, y=predDepth)) +
+  geom_point() +
+  labs(x='Measured depth (cm)', y='Predicted depth (cm)', )
+```
+
 ## Paired
-
-
-
 
 ```{r}
 ( paired2 = sampleActive %>% 

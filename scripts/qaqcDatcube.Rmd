@@ -69,6 +69,22 @@ unique(rocky$lastNm)
 (rockno = datacube %>% filter(is.na(msrDepth)) %>% filter(hitRock=="n") )
 unique(rockno$lastNm)
 ```
+```{r}
+( naMsrDepth = datacube %>% filter(is.na(msrDepth)) )
+```
+```{r}
+unique(naMsrDepth$submitNm)
+```
+
+```{r}
+naMsrDepth %>% filter(submitNm == "Baillargeon") # missing msrDepth n=8 inundation
+naMsrDepth %>% filter(submitNm == "Loranty") # missing msrDepth n=9 Hit rock
+naMsrDepth %>% filter(submitNm == "Natali") # missing msrDepth n=24 missing in submitted data
+naMsrDepth %>% filter(submitNm == "O'Donnell") # missing msrDepth n=5
+naMsrDepth %>% filter(submitNm == "Rocha") # missing msrDepth n=390 missing in submitted data
+naMsrDepth %>% filter(submitNm ==  "Sizov") # missing msrDepth n=4 missing in submitted data
+```
+
 
 ```{r}
 datacube %>% filter(is.na(msrDepth)) %>% filter(hitRock=="n") %>% filter(submitNm=="Baillargeon")
@@ -110,30 +126,65 @@ datacube %>% group_by(lastNm, cntryId, biome) %>%
 
 # Counts
 ```{r}
-data %>% group_by(cntryId, biome, siteId, lastNm) %>%
+datacube %>% group_by(cntryId, biome, siteId, lastNm) %>%
   tally()
 ```
 
 ```{r}
-data %>% group_by(cntryId, biome,  plotId, siteId, lastNm) %>%
+datacube %>% group_by(cntryId, biome,  plotId, siteId, lastNm) %>%
   summarise(n=n())
 ```
 
 ```{r}
-data %>% group_by(cntryId, biome,  fireYr, lastNm ) %>%
+datacube %>% group_by(cntryId, biome,  fireYr, lastNm ) %>%
   summarize(n=n())
 ```
 
 ```{r}
-data %>% group_by(lastNm ) %>%
+datacube %>% group_by(lastNm ) %>%
   summarize(n=n())
 ```
 
 ```{r}
-data %>% filter(lastNm=="Schulze")
+datacube %>% filter(lastNm=="Schulze")
 ```
 
 # Predicted Data
+
 ```{r}
 datacubePred
 ```
+
+```{r}
+( naPredDepth = datacubePred %>% filter(is.na(predDepth)) )
+```
+
+```{r}
+unique(naPredDepth$lastNm)
+```
+
+
+```{r}
+naPredDepth %>% filter(lastNm=="Manies") # sum_A not calculating correctly need to check
+naPredDepth %>% filter(lastNm=="O'Donnell") # missing msrDepth n=5 missing in submitted
+naPredDepth %>% filter(lastNm=="Rocha") # missing msrDepth n= 390 missing in submitted
+naPredDepth %>% filter(lastNm=="Loranty") # missing msrDepth n=9 missing in submitted
+naPredDepth %>% filter(lastNm=="Dieleman_Baltzer_Turetsky") # missing day of month n=1841
+naPredDepth %>% filter(lastNm=="Natali") # Something weird with the Temperature date from ERA5 need to check n=237 on missing n=24 msrDepth in submitted data
+naPredDepth %>% filter(lastNm=="Baillargeon, MacArthur, Natali, Sistla") # missing msrDepth n=8 missing in submitted
+naPredDepth %>% filter(lastNm=="Sizov, Soromotin, Brodt") # missing msrDepth n=4 missing in submitted
+```
+
+## Large depth values
+
+```{r}
+datacubePred %>% filter(msrDepth > 300)
+
+```
+
+```{r}
+datacubePred %>% filter(msrDepth < 0)
+
+```
+
+**THE END**

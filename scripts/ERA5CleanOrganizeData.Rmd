@@ -330,7 +330,7 @@ combine2023 = merge(clean2023, rm2023[, c('plotId', 'siteId', 'year', 'minDate')
 ```{r}
 ( 
 combineAll = dplyr::bind_rows(combine2001, combine2005, combine2006, combine2007, combine2008, combine2009, combine2010, combine2011, combine2012, combine2013, combine2014, combine2015, combine2016, combine2017, combine2018, combine2019, combine2020, combine2023) %>%
-  mutate(altDate = minDate-14)
+  mutate(predDoy = minDate-14)
 )
 ```
 
