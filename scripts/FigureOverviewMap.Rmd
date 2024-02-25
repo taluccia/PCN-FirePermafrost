@@ -139,7 +139,7 @@ nh_cropped <- st_crop(nh_pp, xmin = -180, xmax = 180,
 ecoPalette = c('#a6cee3','#1f78b4',"#00bfa0",'#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00',"#dc0ab4",'#b2df8a','#ffff99', '#CC6677', '#DDCC77')
 ```
 ```{r}
-("#e60049", "#0bb4ff", "#50e991", "#e6d800", "#9b19f5", "#ffa300",  "#b3d4ff", )
+("#e60049", "#0bb4ff", "#50e991", "#e6d800", "#9b19f5", "#ffa300",  "#b3d4ff")
 
 ```
 
@@ -274,35 +274,7 @@ ggplot() +
 
 # Build Overview map by Ecozone
 
-## Base map
-```{r fig.height=5, fig.width=6}
-(
-  basemap <- ggplot() +
-     geom_sf(data = nh_pp, fill = "#F9F6EE", colour="#F9F6EE") +
-    geom_sf(data = permafrost1_pp, aes(fill = EXTENT, color= EXTENT)) +
- 
-  geom_sf(data=artic_pp, fill=NA, colour = "#2F4F4F", lwd=1, linetype="dashed") +
-    scale_fill_manual(values = permafrost_palette4, labels  = c("Continuous", "Discontinuous", "Sporadic"),
-                      name = "Permafrost") +
-    scale_color_manual(values = permafrost_palette4, labels  = c("Continuous", "Discontinuous", "Sporadic"),
-                      name = "Permafrost") +
-  coord_sf(xlim = c(-4002324, 3512498), ylim = c(-3008650,  4002452) ) +
-  theme(panel.grid.major = element_line(color = gray(0.5), linetype = "dashed", size = 0.5), 
-        panel.background = element_rect(fill = "#C5D8D7"),
-        plot.margin=unit(c(0,0,0,0), "mm"),
-        legend.key=element_blank(),
-        legend.position = "none",        
-        legend.text=element_text(size=8),
-        legend.title=element_text(size=9)) +
- 
-  guides(fill=guide_legend( title.position = "top", ncol=3,byrow=TRUE))
-)
-```
 
-```{r}
-
-```
-theme(panel.grid.major = element_line(color = "red", linetype = 2))
 ```{r}
 ( overviewMap = ggplot() +
       geom_sf(data = nh_pp, fill = "#F9F6EE", colour="#F9F6EE") +

@@ -30,8 +30,16 @@ data = read_csv("../data/dataCube/DatacubePermafrostFireERA5.csv")
 ```{r}
 glimpse(data)
 ```
+```{r}
+( manies = data %>% filter(lastNm=="Manies") %>%filter(id <=41) )
+unique(manies$msrDOY)
+```
 
+```{r}
+( natali = data %>% filter(lastNm=="Natali") %>% filter(year ==2015) %>% filter(id>=3365) %>% filter(id<=3484)) %>% filter(TempDoy>259)
 
+```
+3365- 3484
 # Functions to standarize
 Formula Parts 
 A. Take the square root of the Sum of the total degrees above zero for dates prior to thaw depth measure
@@ -43,7 +51,7 @@ F. Multiply thaw depth measure by C
 ```{r}
 calc_A = function(x) {
   x %>% 
-    group_by(year, id, msrDOY) %>%
+    group_by(year, id, lastNm, msrDOY) %>%
     filter(TempDoy < msrDOY) %>%
   filter(TempC > 0) %>%
     arrange(TempDoy) %>%
@@ -60,7 +68,7 @@ calc_A = function(x) {
 
 calc_B = function(x) {
   x %>% 
-    group_by(year, id, msrDOY) %>%
+    group_by(year, id, lastNm, msrDOY) %>%
     filter(TempDoy < predDoy) %>%
   filter(TempC > 0) %>%
     arrange(TempDoy) %>%
@@ -82,25 +90,44 @@ calc_B = function(x) {
 ( calc_B_data = calc_B(data) )
 ```
 
+## Figure out na data in Manies id 1-41
+```{r}
+calc_A_data %>% filter(lastNm=="Manies") %>% filter(id <=41)
+```
+
+```{r}
+manies %>% 
+    group_by(year, id, lastNm, msrDOY) %>%
+    filter(TempDoy < msrDOY) %>%
+  filter(TempC > 0) %>%
+    arrange(TempDoy) %>% 
+  filter(id <=41)
+
+```
+3365- 3484
 ### Filter original data 
 ```{r}
 ( 
   orgData = data %>% 
   dplyr::select(plotId:predDoy) %>%
-  group_by(year, id) %>%
-  slice(1)
+  group_by(year, id, lastNm) %>%
+  slice(1) %>%
+    dplyr::select(plotId:ECO_NAME, minDate, predDoy)
 )
 ```
 
 ### Join Calculations with Orginial
 ```{r}
 ( dataCombine = orgData %>% 
-    full_join(y=calc_A_data, by=c("year", "id", 'msrDOY')) %>%
-    full_join(y=calc_B_data, by=c("year", "id", 'msrDOY')) %>%
+    full_join(y=calc_A_data, by=c("year", "id", 'lastNm', 'msrDOY')) %>%
+    full_join(y=calc_B_data, by=c("year", "id", 'lastNm', 'msrDOY')) %>%
+    mutate(A_sum = ifelse(is.na(A_sum), 0, A_sum),
+           A =ifelse(is.na(A), 0, A)) %>%
     mutate(C = B/A) %>%
     mutate(predDepth = round((msrDepth*C), 0)) 
-)
+    )
 ```
+
 
 ### Write to csv
 

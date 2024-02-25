@@ -144,7 +144,7 @@ dplyr::select(plotId, siteId, cntryId, lastNm, submitNm, lat, lon, year, month, 
 
 ```{r}
 ( df2015 = f2015 %>%
-  dplyr::select(plotId, siteId, cntryId, lastNm, submitNm, lat, lon, year, month, day, biome, distur, fireYr, paired, gtProbe, hitRock, orgDpth, srfH2O, topoPos, slope, vegCvr, msrDOY, msrType, msrDepth, OBJECTID, ECO_NAME, REALM, BIOME_1, ECO_NUM, ECO_ID, X20150401_temperature_2m:X20151031_temperature_2m) %>%
+  dplyr::select(plotId, siteId, cntryId, lastNm, submitNm, lat, lon, year, month, day, biome, distur, fireYr, paired, gtProbe, hitRock, orgDpth, srfH2O, topoPos, slope, vegCvr, msrDOY, msrType, msrDepth, OBJECTID, ECO_NAME, REALM, BIOME_1, ECO_NUM, ECO_ID, X20150401_temperature_2m:X20151229_temperature_2m) %>%
     mutate(id = row_number()) )
 ```
 
@@ -270,7 +270,7 @@ idAltDateFun = function(x)  {
 ## Identify ALT date
 
 ```{r}
-rm2001 = clean2001 %>% idAltDateFun()
+( rm2001 = clean2001 %>% idAltDateFun() )
 ```
 
 ```{r}
@@ -324,6 +324,9 @@ combine2020 = merge(clean2020, rm2020[, c('plotId', 'siteId', 'year', 'minDate')
 combine2023 = merge(clean2023, rm2023[, c('plotId', 'siteId', 'year', 'minDate')], by = c('plotId', 'siteId', 'year'), all.x=TRUE) 
 ```
 
+```{r}
+combine2001
+```
 
 
 # Bind clean 
@@ -337,7 +340,7 @@ combineAll = dplyr::bind_rows(combine2001, combine2005, combine2006, combine2007
 # write to csv
 
 ```{r eval=FALSE, include=FALSE}
-write.csv(combineAll,file = "../outputs/era5Clean/DatacubePermafrostFireERA5.csv")
+write.csv(combineAll,file = "../outputs/era5Clean/DatacubePermafrostFireERA5.csv", row.names = FALSE)
 ```
 
 

@@ -165,7 +165,7 @@ unique(naPredDepth$lastNm)
 
 
 ```{r}
-naPredDepth %>% filter(lastNm=="Manies") # sum_A not calculating correctly need to check
+naPredDepth %>% filter(lastNm=="Manies") # sum_A not calculating correctly need to check for id 1-41 because the temperatures for the days preceeding 117 are all below freezing
 naPredDepth %>% filter(lastNm=="O'Donnell") # missing msrDepth n=5 missing in submitted
 naPredDepth %>% filter(lastNm=="Rocha") # missing msrDepth n= 390 missing in submitted
 naPredDepth %>% filter(lastNm=="Loranty") # missing msrDepth n=9 missing in submitted
@@ -174,7 +174,7 @@ naPredDepth %>% filter(lastNm=="Natali") # Something weird with the Temperature 
 naPredDepth %>% filter(lastNm=="Baillargeon, MacArthur, Natali, Sistla") # missing msrDepth n=8 missing in submitted
 naPredDepth %>% filter(lastNm=="Sizov, Soromotin, Brodt") # missing msrDepth n=4 missing in submitted
 ```
-
+3365- 3484	
 ## Large depth values
 
 ```{r}
@@ -185,6 +185,33 @@ datacubePred %>% filter(msrDepth > 300)
 ```{r}
 datacubePred %>% filter(msrDepth < 0)
 
+```
+
+# Filter out data with errors
+This includes a negative thaw depth
+
+Note from Olefeldt --  all three look like typos. Our thaw rod only is 150 cm, so all numbers need to be within that. 
+```{r}
+datacubePred
+```
+```{r}
+( 
+  datacubePredClean = datacubePred %>% 
+  filter(!msrDepth < 0) %>% # Remove Olefeldt negative measurements (also removes msrDepth with NA)
+  filter(!msrDepth %in% c(4501, 453, 1032))
+)
+```
+
+```{r}
+setdiff( datacubePred, datacubePredClean)
+```
+
+```{r}
+datacubePredClean %>% filter(is.na(predDepth))
+```
+
+```{r eval=FALSE, include=FALSE}
+write.csv(datacubePredClean, file = "../outputs/dataCube/datacubePredClean.csv", row.names = FALSE)
 ```
 
 **THE END**

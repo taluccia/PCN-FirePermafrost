@@ -37,7 +37,7 @@ comp_theme = theme_bw() + theme(legend.position = "none") +
 
 ## Predicted measurements
 ```{r}
-datacubePred = read_csv("../data/dataCube/DatacubePermafrostFirePredicted.csv")
+datacubePred = read_csv("../data/dataCube/datacubePredClean.csv")
 ```
 
 ```{r}
@@ -47,30 +47,20 @@ datacubePred
 # Remove
 
 ```{r}
-( datacubePred1 = datacubePred %>% filter(msrDepth < 1000) %>% drop_na(predDepth))
+( datacubePred1 = datacubePred %>% 
+    filter(msrDepth < 1000) %>% 
+    drop_na(predDepth) %>% 
+    filter_at(vars(predDepth), all_vars(!is.infinite(.)))
+  )
 ```
 
 # Filter and sampling
 
-## Small sample for paired figure
-```{r}
-( sampleActive = datacubePred %>% 
-  filter(msrType =="active") %>%
-  slice_sample(n = 20) %>%
-    mutate(paired = row_number()) %>%
-    dplyr::select(plotId, siteId, paired, msrType, msrDepth, predDepth) %>%
-    pivot_longer(
-    cols = ends_with("Depth"),
-    names_to = "msrPrd",
-    values_to = "depth")
-    
-)
 
-```
 
 ## Data for Date figure
 ```{r}
-( forDates = datacubePred %>% 
+( forDates = datacubePred1 %>% 
     dplyr::select(plotId, siteId, msrType, msrDOY, predDoy) %>%
     pivot_longer(
     cols = ends_with("doy"),
@@ -81,7 +71,7 @@ datacubePred
 
 ## Data for depth figure
 ```{r}
-( forDepth = datacubePred %>% 
+( forDepth = datacubePred1 %>% 
   dplyr::select(plotId, siteId, msrType, msrDepth, predDepth) %>%
     pivot_longer(
     cols = ends_with("Depth"),
@@ -95,15 +85,15 @@ datacubePred
 ```{r}
 forDates %>% 
   group_by(msrType, msrPrd) %>%
-  summarise(mean= mean(date),
-            sd = sd(date),
-            min = min(date),
-            max = max(date))
+  summarise(mean= mean(DoY),
+            sd = sd(DoY),
+            min = min(DoY),
+            max = max(DoY))
 ```
 
 ```{r}
 forDepth %>% 
-  group_by(thw_ctv, msrPrd) %>%
+  group_by(msrType, msrPrd) %>%
   summarise(mean= mean(depth),
             sd = sd(depth),
             min = min(depth),
@@ -117,14 +107,14 @@ forDepth %>%
 ( fig1 = forDates %>% 
     filter(msrType=="thaw") %>% 
     mutate(msrPrd = fct_recode(msrPrd,
-                                  "Measured DoY" = "msrDOY",
-                                  "Predicted DoY" = "predDoy")) %>%
+                                  "Measured" = "msrDOY",
+                                  "Predicted" = "predDoy")) %>%
 ggplot(., aes(x = msrPrd, y=DoY)) +
   geom_violin() + 
   
   geom_boxplot(width=0.1) +
   stat_summary(fun=mean, geom="point", shape=23, size=2, color="red") +
-  labs(x="", y="Day of year (DoY)") +
+  labs(x="Early season", y="Day of year") +
   comp_theme 
   
 )
@@ -134,21 +124,37 @@ ggplot(., aes(x = msrPrd, y=DoY)) +
 ( fig2 = forDates %>% 
     filter(msrType=="active") %>% 
     mutate(msrPrd = fct_recode(msrPrd,
-                                  "Measured DoY" = "msrDOY",
-                                  "Predicted DoY" = "predDoy")) %>%
+                                  "Measured" = "msrDOY",
+                                  "Predicted" = "predDoy")) %>%
 ggplot(., aes(x = msrPrd, y=DoY)) +
   geom_violin() + 
   
   geom_boxplot(width=0.1) +
   stat_summary(fun=mean, geom="point", shape=23, size=2, color="red") +
   
-  labs(x="", y="Day of year (DoY)") +
+  labs(x="Late season", y="Day of year") +
   comp_theme 
 )
 ```
 
 ```{r}
-( comboDates =  cowplot::plot_grid(fig1, fig2, ncol=1, labels = c('A', 'B'), label_size = 12)  ) 
+( figDoy = forDates %>% 
+    mutate(msrPrd = fct_recode(msrPrd,
+                                  "Measured" = "msrDOY",
+                                  "Predicted" = "predDoy")) %>%
+ggplot(., aes(x = msrPrd, y=DoY)) +
+  geom_violin() + 
+  
+  geom_boxplot(width=0.1) +
+  stat_summary(fun=mean, geom="point", shape=23, size=2, color="red") +
+  
+  labs(x="", y="Day of year") +
+  comp_theme 
+)
+```
+
+```{r}
+( comboDates =  cowplot::plot_grid(fig1, fig2, ncol=1, labels = c('A', 'C'), label_size = 12)  ) 
 ```
 
 ```{r}
@@ -160,15 +166,15 @@ ggsave("../figures/DatesMeasurePredictViolin.png", plot = comboDates, width = 3,
 ( fig3 = forDepth %>% 
     filter(msrType=="thaw") %>% 
     mutate(msrPrd = fct_recode(msrPrd,
-                                  "Measured depth" = "msrDepth",
-                                  "Predicted depth" = "predDepth")) %>%
+                                  "Measured" = "msrDepth",
+                                  "Predicted" = "predDepth")) %>%
 ggplot(., aes(x = msrPrd, y=depth)) +
   geom_violin() + 
   
   geom_boxplot(width=0.1) +
   stat_summary(fun=mean, geom="point", shape=23, size=2, color="red") +
   
-  labs(x="", y="Depth (cm)") +
+  labs(x="Early season", y="Depth (cm)") +
   comp_theme 
 )
 ```
@@ -177,8 +183,24 @@ ggplot(., aes(x = msrPrd, y=depth)) +
 ( fig4 = forDepth %>% 
     filter(msrType=="active") %>% 
     mutate(msrPrd = fct_recode(msrPrd,
-                                  "Measured depth" = "msrDepth",
-                                  "Predicted depth" = "predDepth")) %>%
+                                  "Measured" = "msrDepth",
+                                  "Predicted" = "predDepth")) %>%
+ggplot(., aes(x = msrPrd, y=depth)) +
+  geom_violin() + 
+  
+  geom_boxplot(width=0.1) +
+  stat_summary(fun=mean, geom="point", shape=23, size=2, color="red") +
+
+  labs(x="Late season", y="Depth (cm)") +
+comp_theme 
+)
+```
+
+```{r}
+( figDepth = forDepth %>% 
+    mutate(msrPrd = fct_recode(msrPrd,
+                                  "Measured" = "msrDepth",
+                                  "Predicted" = "predDepth")) %>%
 ggplot(., aes(x = msrPrd, y=depth)) +
   geom_violin() + 
   
@@ -190,13 +212,29 @@ comp_theme
 )
 ```
 
+```{r}
+( comboDepths =  cowplot::plot_grid(fig3, fig4, ncol=1, labels = c('B', 'D'), label_size = 12)  ) 
+```
+
+```{r eval=FALSE, include=FALSE}
+ggsave("../figures/DepthsMeasurePredictViolin.png", plot = comboDepths, width = 3, height =4, units = c("in"), dpi=600, bg = "white" )
+```
+
+## Combine all 4 violin plots
 
 ```{r}
-( comboDepths =  cowplot::plot_grid(fig3, fig4, ncol=1, labels = c('A', 'B'), label_size = 12)  ) 
+( comboMsrPredViolin =  cowplot::plot_grid(comboDates, comboDepths, ncol=2)  ) 
+```
+```{r eval=FALSE, include=FALSE}
+ggsave("../figures/DepthsDoYMsrPredViolin.png", plot = comboMsrPredViolin, width = 6, height =4, units = c("in"), dpi=600, bg = "white" )
 ```
 
 ```{r}
-ggsave("../figures/DepthsMeasurePredictViolin.png", plot = comboDepths, width = 3, height =4, units = c("in"), dpi=600, bg = "white" )
+( combo2plotgrid =  cowplot::plot_grid(figDoy, figDepth, ncol=2, labels = c('A', 'B'), label_size = 12)  ) 
+```
+
+```{r eval=FALSE, include=FALSE}
+ggsave("../figures/DepthsDoYMsrPred2PlotViolin.png", plot = combo2plotgrid, width = 6, height =3, units = c("in"), dpi=600, bg = "white" )
 ```
 
 ## Observed vs predicted
@@ -207,16 +245,113 @@ ggplot(data=datacubePred1, aes(x=msrDepth, y=predDepth)) +
   labs(x='Measured depth (cm)', y='Predicted depth (cm)', )
 ```
 
-## Paired
-
+# Paired Measured vs Predicted
+## Small sample for paired figure
 ```{r}
-( paired2 = sampleActive %>% 
+set.seed(29)
+( sampleActive = datacubePred1 %>% 
+  filter(msrType =="active") %>%
+  slice_sample(n = 20) %>%
+    mutate(paired = row_number()) %>%
+    dplyr::select(plotId, siteId, paired, msrType, msrDepth, predDepth) %>%
+    pivot_longer(
+    cols = ends_with("Depth"),
+    names_to = "msrPrd",
+    values_to = "depth")
+    
+)
+
+```
+```{r}
+set.seed(29)
+( sampleThaw = datacubePred1 %>% 
+  filter(msrType =="thaw") %>%
+  slice_sample(n = 20) %>%
+    mutate(paired = row_number()) %>%
+    dplyr::select(plotId, siteId, paired, msrType, msrDepth, predDepth) %>%
+    pivot_longer(
+    cols = ends_with("Depth"),
+    names_to = "msrPrd",
+    values_to = "depth")
+    
+)
+
+```
+##  Graph
+```{r}
+( paired2Active = sampleActive %>% 
     mutate(msrPrd = fct_recode(msrPrd,
-                                  "Measured active" = "dpthMsr",
-                                  "Predicted ALT" = "dpthPrd")) %>%
+                                  "Measured" = "msrDepth",
+                                  "Predicted" = "predDepth")) %>%
     ggplot(., aes(x = msrPrd, y=depth)) +
 
-  geom_line(aes(group = paired),  linetype = "dashed") +
+  geom_line(aes(group = paired),  linetype = "solid", color="gray75", lwd=.5) +
+  scale_color_manual(values = c('#7570b3', '#d95f02'), labels = c("Measured", "Predicted"), name="") +
+     new_scale_color() +
+        geom_point(aes(fill= msrPrd, color=msrPrd), size=3,  pch=21, stroke =1.8) +
+          scale_fill_manual(name="", values=c( "#3b5a9d", "#FEC287FF"))  +
+          scale_color_manual(name="", values = c( "grey79", "black")) +
+  labs(x="Late season", y="Depth (cm)") +
+    comp_theme 
+
+
+)
+
+```
+
+```{r}
+( paired2Thaw = sampleThaw %>% 
+    mutate(msrPrd = fct_recode(msrPrd,
+                                  "Measured" = "msrDepth",
+                                  "Predicted" = "predDepth")) %>%
+    ggplot(., aes(x = msrPrd, y=depth)) +
+
+  geom_line(aes(group = paired),  linetype = "solid", color="gray75", lwd=.5) +
+  scale_color_manual(values = c('#7570b3', '#d95f02'), labels = c("Measured", "Predicted"), name="") +
+     new_scale_color() +
+        geom_point(aes(fill= msrPrd, color=msrPrd), size=3,  pch=21, stroke =1.8) +
+          scale_fill_manual(name="", values=c( "#3b5a9d", "#FEC287FF"))  +
+          scale_color_manual(name="", values = c( "grey79", "black")) +
+  labs(x="Early season", y="Depth (cm)") +
+    comp_theme 
+
+
+)
+
+```
+
+```{r}
+( pairedCombo =  cowplot::plot_grid(paired2Thaw, paired2Active, ncol=2, labels = c('A', 'B'), label_size = 12)  ) 
+```
+
+
+```{r}
+ggsave("../figures/DepthsMeasurePredictActivePairedSample.png", plot = pairedCombo, width = 6, height =3, units = c("in"), dpi=600, bg = "white" )
+```
+
+```{r}
+set.seed(29)
+( sample = datacubePred1 %>% 
+  slice_sample(n = 30) %>%
+    mutate(paired = row_number()) %>%
+    dplyr::select(plotId, siteId, paired, msrType, msrDepth, predDepth) %>%
+    pivot_longer(
+    cols = ends_with("Depth"),
+    names_to = "msrPrd",
+    values_to = "depth")
+    
+)
+
+```
+
+```{r}
+( paired2 = sample %>% 
+    mutate(msrPrd = fct_recode(msrPrd,
+                                  "Measured" = "msrDepth",
+                                  "Predicted" = "predDepth")) %>%
+    ggplot(., aes(x = msrPrd, y=depth)) +
+
+  geom_line(aes(group = paired),  linetype = "solid", color="gray75", lwd=.5) +
   scale_color_manual(values = c('#7570b3', '#d95f02'), labels = c("Measured", "Predicted"), name="") +
      new_scale_color() +
         geom_point(aes(fill= msrPrd, color=msrPrd), size=3,  pch=21, stroke =1.8) +
@@ -230,6 +365,7 @@ ggplot(data=datacubePred1, aes(x=msrDepth, y=predDepth)) +
 
 ```
 
+
 ```{r}
-ggsave("../figures/DepthsMeasurePredictActivePairedSample.png", plot = paired2, width = 3, height =3, units = c("in"), dpi=600, bg = "white" )
+ggsave("../figures/DepthsMeasurePredictActivePairedSample1Plot.png", plot = paired2, width = 3, height =3, units = c("in"), dpi=600, bg = "white" )
 ```
