@@ -1,0 +1,54 @@
+---
+title: "Paired Burned Unburned"
+author: "Anna Talucci"
+date: "2024-02-23"
+output: html_document
+---
+
+# clear environment
+```{r}
+rm(list=ls())
+```
+
+# Overview
+Figures looking at measured versus predicted
+
+
+# Packages
+
+```{r}
+library(tidyverse)
+library(lubridate)
+library(ggpubr)
+library(ggnewscale)
+```
+
+# Plot themes
+```{r}
+comp_theme = theme_bw() + theme(legend.position = "none") +  
+  theme(panel.grid.major = element_blank()) +
+    theme(axis.title.y = element_text(size = 11, hjust = 0.5, vjust = 1.1),
+        axis.text.x = element_text(size = 10, color = "black"),
+        axis.text.y = element_text(size = 10, color = "black"))
+```
+
+# Data
+
+## Predicted measurements
+```{r}
+datacubePred = read_csv("../data/dataCube/datacubePredClean.csv")
+```
+
+```{r}
+datacubePred
+```
+
+# Remove
+
+```{r}
+( datacubePred1 = datacubePred %>% 
+    filter(msrDepth < 1000) %>% 
+    drop_na(predDepth) %>% 
+    filter_at(vars(predDepth), all_vars(!is.infinite(.)))
+  )
+```
