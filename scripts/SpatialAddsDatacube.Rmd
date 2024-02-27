@@ -91,11 +91,19 @@ wwfPt = st_join(datacubePts, tunBorWwf)
 ```{r}
 names(wwfPt)
 ```
+```{r}
+(diaz = wwfPt %>% filter(submitNm=="Diaz") )
+wwfPt %>% filter(is.na(ECO_NAME)) 
+
+unique(diaz$ECO_NAME)
+```
 
 ```{r eval=FALSE, include=FALSE}
 st_write(wwfPt, "../outputs/spatialDataCreate/PermafrostFireEcozoneDatacube.shp", driver="ESRI Shapefile")
 ```
-
+```{r eval=FALSE, include=FALSE}
+st_write(diaz, "../outputs/spatialDataCreate/diaz.shp", driver="ESRI Shapefile")
+```
 ```{r eval=FALSE, include=FALSE}
 st_write(tunBorWwf, "../outputs/spatialDataCreate/WwfEcoregionsTunBor.shp", driver="ESRI Shapefile")
 ```

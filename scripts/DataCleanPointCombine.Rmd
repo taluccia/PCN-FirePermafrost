@@ -815,7 +815,7 @@ clean <- function(df){ df %>%
     dplyr::select(plotId, siteId, cntryId, lastNm, submitNm, lat, lon, year, month, day, biome, distur, fireYr, paired, gtProbe, hitRock, orgDpth, srfH2O, topoPos, slope, vegCvr, msrDOY, msrType, msrDepth) %>%
   mutate(msrType = recode_factor(msrType , "T" = "thaw", "TRUE"= "thaw", A = "active")) %>%
   mutate(biome = recode_factor(biome, B = "boreal", boreal = "boreal", "T" = "tundra", tundra = "tundra")) %>%
-  mutate(distur = recode_factor(distur, burned = "burned", burn = "burned", Burned = "burned", Burn = "burned", '72burn' = "burned", Unburn = 'unburned', unburn = 'unburned', unburned = 'unburned'))
+  mutate(distur = recode_factor(distur, burned = "burned", burn = "burned", Burned = "burned", Burn = "burned", '72burn' = "burned", Unburn = 'unburned', Unburned = 'unburned', unburn = 'unburned', unburned = 'unburned'))
 }
 
 ```

@@ -25,7 +25,7 @@ library(ggnewscale)
 
 # Plot themes
 ```{r}
-comp_theme = theme_bw() + theme(legend.position = "none") +  
+comp_theme = theme_bw() + theme(legend.position = "bottom") +  
   theme(panel.grid.major = element_blank()) +
     theme(axis.title.y = element_text(size = 11, hjust = 0.5, vjust = 1.1),
         axis.text.x = element_text(size = 10, color = "black"),
@@ -49,6 +49,35 @@ datacubePred
 ( datacubePred1 = datacubePred %>% 
     filter(msrDepth < 1000) %>% 
     drop_na(predDepth) %>% 
-    filter_at(vars(predDepth), all_vars(!is.infinite(.)))
+    filter_at(vars(predDepth), all_vars(!is.infinite(.))) %>%
+    mutate(distur = recode_factor(distur, burned = "burned", Unburned = 'unburned', unburned = 'unburned'))
+
   )
+```
+```{r}
+datacubePred1 %>% filter(is.na(ECO_NAME)) 
+```
+
+# aggregate burn and unburned pairs
+
+```{r}
+( aggregate = datacubePred1 %>% 
+  group_by(biome, ECO_NAME, submitNm, distur, paired) %>%
+  summarise(avgPredDepth = mean(predDepth)) 
+)
+```
+```{r}
+ecoPalette = c('#a6cee3','#1f78b4',"#00bfa0",'#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00',"#dc0ab4",'#b2df8a','#ffff99', '#CC6677', '#DDCC77')
+```
+
+```{r}
+
+ggplot(aggregate, aes(x = distur, y=avgPredDepth, color=ECO_NAME)) +
+
+  geom_boxplot() +
+  scale_color_manual(values=ecoPalette) +
+  labs(x="", y="Depth (cm)") +
+  comp_theme 
+  
+
 ```

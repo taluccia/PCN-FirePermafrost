@@ -202,6 +202,11 @@ datacubePred
 )
 ```
 
+%>% 
+    filter(msrDepth < 1000) %>% 
+    drop_na(predDepth) %>% 
+    filter_at(vars(predDepth), all_vars(!is.infinite(.)))
+
 ```{r}
 setdiff( datacubePred, datacubePredClean)
 ```
