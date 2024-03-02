@@ -49,8 +49,7 @@ datacubePred
 ( datacubePred1 = datacubePred %>% 
     filter(msrDepth < 1000) %>% 
     drop_na(predDepth) %>% 
-    filter_at(vars(predDepth), all_vars(!is.infinite(.))) %>%
-    mutate(distur = recode_factor(distur, burned = "burned", Unburned = 'unburned', unburned = 'unburned'))
+    filter_at(vars(predDepth), all_vars(!is.infinite(.))) 
 
   )
 ```

@@ -111,8 +111,8 @@ manies %>%
   orgData = data %>% 
   dplyr::select(plotId:predDoy) %>%
   group_by(year, id, lastNm) %>%
-  slice(1) %>%
-    dplyr::select(plotId:ECO_NAME, minDate, predDoy)
+  slice(1) #%>%
+    #dplyr::select(plotId:ECO_NAME, minDate, predDoy)
 )
 ```
 
@@ -128,6 +128,35 @@ manies %>%
     )
 ```
 
+# Remove outliers, na, and INF
+```{r}
+unique(dataCombine$distur)
+```
+
+```{r}
+dataCombine %>% 
+    filter(msrDepth < 1000) %>% 
+    drop_na(predDepth) %>% 
+    filter_at(vars(predDepth), all_vars(!is.infinite(.))) 
+
+```
+
+```{r}
+dataCombine %>% filter(is.na(msrDepth)) 
+```
+
+```{r}
+( inf = dataCombine %>% filter(is.infinite(predDepth)) )
+
+unique(inf$submitNm)
+
+inf %>% filter(submitNm == "Dieleman")
+inf %>% filter(submitNm == "Holloway")
+
+inf %>% filter(submitNm == "Olefeldt")
+inf %>% filter(submitNm == "Natali")
+
+```
 
 ### Write to csv
 

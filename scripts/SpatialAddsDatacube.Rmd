@@ -67,7 +67,14 @@ wwf %>% st_drop_geometry() %>% distinct(REALM)
 ```
 
 
+## Resolve
+```{r}
+resolve = st_read("../data/spatialData/RESOLVE_Ecoregions_and_Biomes/Biomes_and_Ecoregions_2017.shp", "Biomes_and_Ecoregions_2017")
+```
 
+```{r}
+resolve
+```
 
 # Filter for WWF Ecoregions
 ```{r}
@@ -75,14 +82,12 @@ wwf %>% st_drop_geometry() %>% distinct(REALM)
   tunBorWwf = wwf %>% 
     filter(REALM %in% c("PA", "NA")) %>% 
     dplyr::select(OBJECTID, ECO_NAME, REALM, BIOME, ECO_NUM, ECO_ID, geometry) %>% 
-    filter(BIOME %in% c(11, 6)) 
+    filter(BIOME %in% c(11, 6)) %>%
+    rename(wwfId = OBJECTID, wwfName=ECO_NAME, wwfRealm = REALM, wwfBiome = BIOME, wwfNum = ECO_NUM, wwfEcoId = ECO_ID)
 )
 ```
 
-```{r}
-unique(tunBorWwf$BIOME)
-( forest = tunBorWwf %>% filter(BIOME=="6") )
-```
+
 
 ```{r}
 wwfPt = st_join(datacubePts, tunBorWwf) 
@@ -93,13 +98,47 @@ names(wwfPt)
 ```
 ```{r}
 (diaz = wwfPt %>% filter(submitNm=="Diaz") )
-wwfPt %>% filter(is.na(ECO_NAME)) 
 
-unique(diaz$ECO_NAME)
+unique(diaz$wwfName)
+```
+
+## Add Resolve ecozones
+```{r}
+( resTunBor = resolve %>% 
+    filter(REALM %in% c("Palearctic", "Nearctic")) %>% 
+    dplyr::select(OBJECTID, ECO_NAME, BIOME_NUM, BIOME_NAME, REALM, ECO_ID, geometry) %>% 
+    filter(BIOME_NUM %in% c(11, 6)) %>%
+    rename(resId = OBJECTID, resName=ECO_NAME, resBiomNm = BIOME_NUM, resBiomeName = BIOME_NAME, resRealm = REALM,  resEcoId = ECO_ID)
+)
+```
+
+```{r}
+resWwfPt = st_join(wwfPt, resTunBor) 
+```
+```{r}
+resWwfPt
+```
+```{r}
+(diaz = resWwfPt %>% filter(submitNm=="Diaz") )
+
+unique(diaz$resName)
+unique(diaz$wwfName)
+```
+
+```{r}
+resWwfPt %>% filter(is.na(resName)) 
+```
+
+```{r}
+resWwfPt %>% filter(is.na(wwfName)) 
+```
+
+```{r}
+resWwfPt %>% filter(is.na(msrDoy)) 
 ```
 
 ```{r eval=FALSE, include=FALSE}
-st_write(wwfPt, "../outputs/spatialDataCreate/PermafrostFireEcozoneDatacube.shp", driver="ESRI Shapefile")
+st_write(resWwfPt, "../outputs/spatialDataCreate/PermafrostFireEcozoneDatacube.shp", driver="ESRI Shapefile")
 ```
 ```{r eval=FALSE, include=FALSE}
 st_write(diaz, "../outputs/spatialDataCreate/diaz.shp", driver="ESRI Shapefile")
@@ -114,7 +153,9 @@ unique(wwfPt$ECO_NAME)
 ```{r}
 cat(paste0(sprintf('"%s"', sort(unique(wwfPt$ECO_NAME))), collapse = ", "))
 ```
+
 #  Summaries sites by EcoRegions
+
 ```{r}
 (
   wwfPtCt <- wwfPt %>% st_drop_geometry() %>%
@@ -155,8 +196,9 @@ cat(paste0(sprintf('"%s"', sort(unique(wwfPt$ECO_NAME))), collapse = ", "))
 ```{r}
 write_csv(wwfPtSum, '../outputs/wwfCentroidSummary.csv')
 ```
-# Centroid by each region
 
+# Centroid by each region
+Fore the overview map
 ## 1. "Arctic coastal tundra"
 ```{r}
 eco01 =  tunBorWwf %>% 

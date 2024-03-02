@@ -92,7 +92,7 @@ str(f1)
 (
   f1_dates = f1 %>%
   mutate(date = as.Date(with(., paste(year, month, day,sep="-")), "%Y-%m-%d")) %>%
-  mutate(julianDate = yday(date)) %>%
+  mutate(msrDoy = yday(date)) %>%
   mutate(paired = ifelse(site_id == 'a', "a1",
                   ifelse(site_id == 'b', "a2",
                   ifelse(site_id == 'c', "a3",
@@ -107,7 +107,7 @@ str(f1)
 ```{r}
 # distinct site pairs
 f1_dates %>% distinct(site_id, plot_id, fire_id, burn_unburn) 
-f1_dates %>% distinct(julianDate, year, date)
+f1_dates %>% distinct(msrDoy, year, date)
 ```
 
 ## 2. Breen
@@ -128,7 +128,7 @@ unique(f2$year)
     mutate(fire_id = paste(fire_id1 , fire_id2, fire_id3, sep = ', ')) %>%
   dplyr::select(last_name:day, burn_unburn:reburn, fire_id) %>%
   mutate(date = as.Date(with(., paste(year, month, day,sep="-")), "%Y-%m-%d")) %>%
-  mutate(julianDate = yday(date)) %>%
+  mutate(msrDoy = yday(date)) %>%
     mutate(fire_id = gsub("\\,,*", "", fire_id)) %>%
     drop_na(lat)  %>%
   mutate(paired = "b1") %>%
@@ -139,7 +139,7 @@ unique(f2$year)
 ```{r}
 # Look at distinct identifiers
 f2_dates %>% distinct(site_id, plot_id, burn_unburn) 
-f2_dates %>% distinct(julianDate, year, date)
+f2_dates %>% distinct(msrDoy, year, date)
 ```
 
 ## 3. Buma
@@ -171,7 +171,7 @@ str(f3)
 ( f3_dates = f3 %>%
     dplyr::select(-HIT) %>%
   mutate(date = as.Date(with(., paste(year, month, day,sep="-")), "%Y-%m-%d")) %>%
-  mutate(julianDate = yday(date))  %>%
+  mutate(msrDoy = yday(date))  %>%
   mutate(paired = ifelse(site_id %in% c('DALTON_1', 'DALTON_2', 'DALTON_3', 'DALTON_0'), "c1", 'NA')) %>%
     mutate(submitNm="Buma")
 )
@@ -182,7 +182,7 @@ f3_dates %>% filter(long > 0)
 ```{r}
 f3_dates %>% distinct(site_id, burn_unburn) 
 f3_dates %>% distinct(site_id, plot_id, fire_id, burn_unburn) 
-f3_dates %>% distinct(julianDate, year, date)
+f3_dates %>% distinct(msrDoy, year, date)
 ```
 ## 4. Diaz-Veraverbeke
 
@@ -207,7 +207,7 @@ f4 %>% dplyr::select(plot_id, pairUnb) %>% group_by(pairUnb) %>%
 (
   f4_dates = f4 %>%
   mutate(date = as.Date(with(., paste(year, month, day,sep="-")), "%Y-%m-%d")) %>%
-  mutate(julianDate = yday(date)) %>%
+  mutate(msrDoy = yday(date)) %>%
   drop_na((lat))  %>%
   mutate(paired = ifelse(plot_id %in% c('23EF07B', '23EF12B', '23EF22B', '23EF23B', '23EF27C'), "d1",
                   ifelse(plot_id %in% c('23EF05B', '23EF10B',	'23EF14C'), "d2",
@@ -222,7 +222,7 @@ f4 %>% dplyr::select(plot_id, pairUnb) %>% group_by(pairUnb) %>%
 
 ```{r}
 f4_dates %>% distinct(site_id, plot_id, fire_id, burn_unburn) 
-f4_dates %>% distinct(julianDate, year, date)
+f4_dates %>% distinct(msrDoy, year, date)
 ```
 ## 5. Dielman
 ```{r}
@@ -251,13 +251,14 @@ unique(f5$site_id)
 f5 %>% group_by(thaw_active, site_id) %>% count(.)
 f5 %>% filter(thaw_active == "T")
 f5 %>% filter(thaw_active == "A")
+f5 %>% filter(lat>89)
 ```
 
 ```{r}
 (
   f5_dates = f5 %>%
   mutate(date = as.Date(with(., paste(year, month, day,sep="-")), "%Y-%m-%d")) %>%
-  mutate(julianDate = yday(date)) %>%
+  mutate(msrDoy = yday(date)) %>%
   mutate(paired = ifelse(plot_id %in% c('CG1-15', 'CG1-157', 'CG1-18', 'CG1-25', 'CG1-6', 'CG1-8', 'F1-12', 'F1-22', 'F1-25', 'F1-31', 'F1-47'), "e1",
                   ifelse(plot_id %in% c('C1-14', 'C1-17', 'C1-19', 'C1-32', 'C1-8', 'F11-1', 'F11-10', 'F11-15', 'F11-19'), "e2",
                   ifelse(plot_id %in% c('F13-11', 'F13-5', 'C5-4'), "e3",
@@ -273,7 +274,7 @@ f5 %>% filter(thaw_active == "A")
 
 ```{r}
 f5_dates %>% distinct(site_id, plot_id, fire_id, burn_unburn) 
-f5_dates %>% distinct(julianDate, year, date)
+f5_dates %>% distinct(msrDoy, year, date)
 ```
 
 ## 6. Douglas
@@ -293,7 +294,7 @@ f6$slope <- read.csv(f[6], header = TRUE, colClasses = "character")[,20]
 ```{r}
 f6_dates = f6 %>%
   mutate(date = as.Date(with(., paste(year, month, day,sep="-")), "%Y-%m-%d")) %>%
-  mutate(julianDate = yday(date)) %>%
+  mutate(msrDoy = yday(date)) %>%
   dplyr::select(-notes)  %>%
   mutate(paired = "f1") %>%
     mutate(submitNm="Douglas")
@@ -304,7 +305,7 @@ f6_dates
 
 ```{r}
 f6_dates %>% distinct(site_id, plot_id, fire_id, burn_unburn) 
-f6_dates %>% distinct(julianDate, year, date)
+f6_dates %>% distinct(msrDoy, year, date)
 ```
 
 
@@ -331,7 +332,7 @@ f7 %>% filter(thaw_active == "T")
 ( 
 f7_dates = f7 %>%
   mutate(date = as.Date(with(., paste(year, month, day,sep="-")), "%Y-%m-%d")) %>%
-  mutate(julianDate = yday(date)) %>%
+  mutate(msrDoy = yday(date)) %>%
   mutate(paired = "g1") %>%
     mutate(submitNm="Frost")
 )
@@ -340,7 +341,7 @@ f7_dates = f7 %>%
 
 ```{r}
 f7_dates %>% distinct(site_id, plot_id, fire_id, burn_unburn) 
-f7_dates %>% distinct(julianDate, year, date)
+f7_dates %>% distinct(msrDoy, year, date)
 ```
 
 ## 8. Gaglioti
@@ -366,7 +367,7 @@ str(f8)
 (
   f8_dates = f8 %>%
   mutate(date = as.Date(with(., paste(year, month, day,sep="-")), "%Y-%m-%d")) %>%
-  mutate(julianDate = yday(date)) %>%
+  mutate(msrDoy = yday(date)) %>%
   dplyr::select(-Notes) %>%
   mutate(paired = "h1") %>%
     mutate(submitNm="Gaglioti")
@@ -375,7 +376,7 @@ str(f8)
 
 ```{r}
 f8_dates %>% distinct(site_id, plot_id, fire_id, burn_unburn) 
-f8_dates %>% distinct(julianDate, year, date)
+f8_dates %>% distinct(msrDoy, year, date)
 ```
 
 ## 9. Holloway
@@ -429,14 +430,14 @@ str(f9)
 (
   f9_dates = f9 %>%
   mutate(date = as.Date(with(., paste(year, month, day,sep="-")), "%Y-%m-%d")) %>%
-  mutate(julianDate = yday(date)) %>%
+  mutate(msrDoy = yday(date)) %>%
     mutate(submitNm="Holloway")
 )
 ```
 
 ```{r}
 f9_dates %>% distinct(site_id, plot_id, fire_id, burn_unburn, pairUnb) 
-f9_dates %>% distinct(julianDate, year, date)
+f9_dates %>% distinct(msrDoy, year, date)
 ```
 
 ## 10. Loranty
@@ -455,7 +456,7 @@ glimpse(f10)
 ```{r}
 f10_dates = f10 %>%
   mutate(date = as.Date(with(., paste(year, month, day,sep="-")), "%Y-%m-%d")) %>%
-  mutate(julianDate = yday(date)) %>%
+  mutate(msrDoy = yday(date)) %>%
   dplyr::select(-notes) %>%
   mutate(paired = "j1") %>%
     mutate(submitNm="Loranty")
@@ -488,7 +489,7 @@ f11 = f11 %>%
 ```{r}
 f11_dates = f11 %>%
   mutate(date = as.Date(with(., paste(year, month, day,sep="-")), "%Y-%m-%d")) %>%
-  mutate(julianDate = yday(date)) %>%
+  mutate(msrDoy = yday(date)) %>%
   dplyr::select(-notes) %>%
   mutate(paired = "k1") %>%
     mutate(submitNm="Manies")
@@ -498,7 +499,7 @@ f11_dates
 
 ```{r}
 f11_dates %>% distinct(site_id, plot_id, fire_id, burn_unburn) 
-f11_dates %>% distinct(site_id, thaw_active, julianDate, year, date)
+f11_dates %>% distinct(site_id, thaw_active, msrDoy, year, date)
 ```
 
 ## 12. Natali
@@ -531,7 +532,7 @@ str(f12)
 (
   f12_dates = f12 %>%
   mutate(date = as.Date(with(., paste(year, month, day,sep="-")), "%Y-%m-%d")) %>%
-  mutate(julianDate = yday(date)) %>%
+  mutate(msrDoy = yday(date)) %>%
   mutate(paired = ifelse(site_id %in% c('ANKB', 'ANKU'), "l1",
                   ifelse(site_id %in% c('BCB', 'BCU'), "l2",
                   ifelse(site_id %in% c('HCB', 'HCU'), "l3",
@@ -556,7 +557,7 @@ f12_dates %>% group_by(thaw_active, site_id) %>% count(.)
 f12_dates %>% filter(thaw_active == "T")
 f12_dates %>% distinct(site_id, plot_id, fire_id, burn_unburn) 
 f12_dates %>% filter(site_id =="YKD")
-f12_dates %>% distinct(julianDate, year, date)
+f12_dates %>% distinct(msrDoy, year, date)
 f12_dates %>% filter_all(any_vars(is.na(.))) 
 ```
 
@@ -582,7 +583,7 @@ f13 %>% distinct(site_id,year,month,day,fire_id,burn_unburn)
 ( 
   f13_dates = f13 %>%
   mutate(date = as.Date(with(., paste(year, month, day,sep="-")), "%Y-%m-%d")) %>%
-  mutate(julianDate = yday(date)) %>%
+  mutate(msrDoy = yday(date)) %>%
   mutate(paired = ifelse(site_id %in% c('ECLB', 'ECLC'), "m1",
                   ifelse(site_id %in% c('ECHB',	'ECHC'), "m2",
                   ifelse(site_id %in% c('HC03', 'HC93', 'HC90', 'HC67', 'HCCN'), "m3",
@@ -593,8 +594,8 @@ f13 %>% distinct(site_id,year,month,day,fire_id,burn_unburn)
 
 ```{r}
 f13 %>% distinct(site_id, plot_id, fire_id, burn_unburn) 
-f13_dates %>% distinct(julianDate, year, date)
-f13_dates %>% distinct(site_id, thaw_active, julianDate, year, date)
+f13_dates %>% distinct(msrDoy, year, date)
+f13_dates %>% distinct(site_id, thaw_active, msrDoy, year, date)
 ```
 
 ## 14. Olefeldt
@@ -622,7 +623,7 @@ str(f14)
 (
   f14_dates = f14 %>%
   mutate(date = as.Date(with(., paste(year, month, day,sep="-")), "%Y-%m-%d")) %>%
-  mutate(julianDate = yday(date)) %>%
+  mutate(msrDoy = yday(date)) %>%
   mutate(paired = ifelse(site_id %in% c('camsell_1975', 'camsell_unburn'), "n1",
                   ifelse(site_id %in% c('fortsimpson_1995',	'fortsimpson_2006', 'fortsimpson_unburn'), "n2",
                   ifelse(site_id %in% c('kakisa_2014', 'kakisa_unburn'), "n3",
@@ -637,7 +638,8 @@ str(f14)
 ```{r}
 f14_dates %>% filter_all(any_vars(is.na(.))) 
 f14_dates %>% distinct(site_id, plot_id, burn_unburn) 
-f14_dates %>% distinct(julianDate, year, date)
+f14_dates %>% distinct(msrDoy, year, date)
+f14_dates %>% filter(is.na(msrDoy))
 ```
 
 ## 15. Paulson
@@ -661,7 +663,7 @@ str(f15)
 ( 
   f15_dates = f15 %>%
   mutate(date = as.Date(with(., paste(year, month, day,sep="-")), "%Y-%m-%d")) %>%
-  mutate(julianDate = yday(date)) %>%
+  mutate(msrDoy = yday(date)) %>%
   dplyr::select(-notes) %>%
   mutate(paired = ifelse(site_id %in% c('alnus'), "o1",
                   ifelse(site_id %in% c('ans'), "o2",
@@ -681,7 +683,7 @@ str(f15)
 
 ```{r}
 f15_dates %>% distinct(site_id, plot_id, fire_id, burn_unburn) 
-f15_dates %>% distinct(julianDate, year, date)
+f15_dates %>% distinct(msrDoy, year, date)
 ```
 
 ## 16. Rocha
@@ -707,7 +709,7 @@ str(f16)
 (
   f16_dates = f16 %>%
   mutate(date = as.Date(with(., paste(year, month, day,sep="-")), "%Y-%m-%d")) %>%
-  mutate(julianDate = yday(date)) %>%
+  mutate(msrDoy = yday(date)) %>%
   dplyr::select(-notes) %>%
   mutate(paired = ifelse(site_id %in% c('ARF Severe', 'ARF Moderate', 'ARF Unburned'), "p1",
                   ifelse(site_id %in% c('Kuparuk Burned',	'Kuparuk Unburned'), "p2",
@@ -720,7 +722,7 @@ str(f16)
 
 ```{r}
 f16_dates %>% distinct(site_id, plot_id, fire_id, burn_unburn) 
-f16_dates %>% distinct(julianDate, year, date)
+f16_dates %>% distinct(msrDoy, year, date)
 ```
 
 ## 17. Sizov
@@ -736,7 +738,7 @@ str(f17)
 (
   f17_dates = f17 %>%
   mutate(date = as.Date(with(., paste(year, month, day,sep="-")), "%Y-%m-%d")) %>%
-  mutate(julianDate = yday(date)) %>%
+  mutate(msrDoy = yday(date)) %>%
   dplyr::select(-notes) %>%
     mutate(paired = "q1") %>%
     mutate(submitNm="Sizov")
@@ -745,7 +747,7 @@ str(f17)
 
 ```{r}
 f17_dates %>% distinct(site_id, plot_id, fire_id, burn_unburn) 
-f17_dates %>% distinct(julianDate, year, date)
+f17_dates %>% distinct(msrDoy, year, date)
 ```
 
 ## 18. Veraverbeke
@@ -766,7 +768,7 @@ f18$thaw_active <- read.csv(f[18], header = TRUE, colClasses = "character")[,19]
 (
   f18_dates = f18 %>%
   mutate(date = as.Date(with(., paste(year, month, day,sep="-")), "%Y-%m-%d")) %>%
-  mutate(julianDate = yday(date)) %>%
+  mutate(msrDoy = yday(date)) %>%
   drop_na((lat))  %>%
   mutate(paired = ifelse(plot_id %in% c('YE001B', 'YE016C'), "r1",
                   ifelse(plot_id %in% c('YE002B',	'YE017C'), "r2",
@@ -780,7 +782,7 @@ f18$thaw_active <- read.csv(f[18], header = TRUE, colClasses = "character")[,19]
 
 ```{r}
 f18_dates %>% distinct(site_id, plot_id, fire_id, burn_unburn) 
-f18_dates %>% distinct(julianDate, year, date)
+f18_dates %>% distinct(msrDoy, year, date)
 ```
 
 
@@ -809,10 +811,9 @@ clean <- function(df){ df %>%
          msrDepth = thaw_depth,   
          msrType = thaw_active, 
          topoPos = topo_position, 
-         msrDOY = julianDate,
          srfH2O = surface_water) %>%
     mutate(msrType = as.character(msrType)) %>%
-    dplyr::select(plotId, siteId, cntryId, lastNm, submitNm, lat, lon, year, month, day, biome, distur, fireYr, paired, gtProbe, hitRock, orgDpth, srfH2O, topoPos, slope, vegCvr, msrDOY, msrType, msrDepth) %>%
+    dplyr::select(plotId, siteId, cntryId, lastNm, submitNm, lat, lon, year, month, day, biome, distur, fireYr, paired, gtProbe, hitRock, orgDpth, srfH2O, topoPos, slope, vegCvr, msrDoy, msrType, msrDepth) %>%
   mutate(msrType = recode_factor(msrType , "T" = "thaw", "TRUE"= "thaw", A = "active")) %>%
   mutate(biome = recode_factor(biome, B = "boreal", boreal = "boreal", "T" = "tundra", tundra = "tundra")) %>%
   mutate(distur = recode_factor(distur, burned = "burned", burn = "burned", Burned = "burned", Burn = "burned", '72burn' = "burned", Unburn = 'unburned', Unburned = 'unburned', unburn = 'unburned', unburned = 'unburned'))
@@ -851,7 +852,8 @@ glimpse(f10_clean)
 # Combine into datacube
 
 ```{r}
-dataCube = dplyr::bind_rows(f1_clean, f2_clean, f3_clean, f4_clean, f5_clean, f6_clean, f7_clean, f8_clean, f9_clean, f10_clean, f11_clean, f12_clean, f13_clean, f14_clean, f15_clean, f16_clean, f17_clean, f18_clean)
+dataCube = dplyr::bind_rows(f1_clean, f2_clean, f3_clean, f4_clean, f5_clean, f6_clean, f7_clean, f8_clean, f9_clean, f10_clean, f11_clean, f12_clean, f13_clean, f14_clean, f15_clean, f16_clean, f17_clean, f18_clean) %>%
+  filter(lat < 89) # Remove Dielman lat 90
 ```
 
 ```{r}
@@ -860,6 +862,14 @@ dataCube
 
 ```{r}
 colnames(dataCube)
+```
+
+```{r}
+( nadoy = dataCube %>% filter(is.na(msrDoy)) )
+```
+
+```{r}
+unique(nadoy$submitNm)
 ```
 
 ## Save Datacube as csv
@@ -879,7 +889,10 @@ df_to_sf <- function(x){
 
 ## Drop Lat Lon NA and convert to shapefile 
 ```{r}
-( dataCubePts = dataCube %>% drop_na(lat, lon) %>% df_to_sf() )
+( dataCubePts = dataCube %>% 
+    drop_na(lat, lon) %>% 
+    #filter(lat < 89) %>% # Remove Dielman lat 90
+    df_to_sf() )
 ```
 
 ## write to shapefile
