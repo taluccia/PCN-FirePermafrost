@@ -163,6 +163,20 @@ datacubePred
 unique(naPredDepth$lastNm)
 ```
 
+```{r}
+( infPredDepth = datacubePred %>% filter(is.infinite(predDepth)) )
+```
+```{r}
+infPredDepth %>% filter(submitNm=="Manies")
+infPredDepth %>% filter(submitNm=="Dieleman")
+infPredDepth %>% filter(submitNm=="Natali")
+```
+
+
+```{r}
+unique(infPredDepth$submitNm)
+```
+
 
 ```{r}
 naPredDepth %>% filter(lastNm=="Manies") # sum_A not calculating correctly need to check for id 1-41 because the temperatures for the days preceeding 117 are all below freezing
