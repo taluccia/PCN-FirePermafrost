@@ -853,7 +853,8 @@ glimpse(f10_clean)
 
 ```{r}
 dataCube = dplyr::bind_rows(f1_clean, f2_clean, f3_clean, f4_clean, f5_clean, f6_clean, f7_clean, f8_clean, f9_clean, f10_clean, f11_clean, f12_clean, f13_clean, f14_clean, f15_clean, f16_clean, f17_clean, f18_clean) %>%
-  filter(lat < 89) # Remove Dielman lat 90
+  filter(lat < 89) %>% # Remove Dielman lat 90
+  filter(msrDepth < 1000) # Remove measurements over 1000 per Olefeldt email 
 ```
 
 ```{r}
