@@ -892,7 +892,22 @@ df_to_sf <- function(x){
 ( dataCubePts = dataCube %>% 
     drop_na(lat, lon) %>% 
     #filter(lat < 89) %>% # Remove Dielman lat 90
+    filter(!is.na(msrDoy)) %>% # Remove sites missing Doy
     df_to_sf() )
+```
+
+```{r}
+glimpse(dataCubePts)
+```
+
+
+```{r}
+dataCubePts %>% filter(is.na(msrDoy)) 
+```
+
+```{r}
+check2016 = dataCubePts %>% filter(year==2016) %>% filter(cntryId=="CA")
+unique(check2016$msrDepth)
 ```
 
 ## write to shapefile

@@ -5,7 +5,28 @@ date: "2024-01-04"
 output: html_document
 ---
 
-# Overview
+# Google Earth Engine Code
+
+Run in Javescript code editor. 
+
+Link to Code
+
+
+```{js}    
+    aoi = 
+    /* color: #d63000 */
+    /* displayProperties: [
+      {
+        "type": "rectangle"
+      }
+    ] */
+    ee.Geometry.Polygon(
+        [[[-5.159694522180871, 77.04702477015937],
+          [-5.159694522180871, 48.829200881613126],
+          [306.3246804778192, 48.829200881613126],
+          [306.3246804778192, 77.04702477015937]]], null, false);
+
+```
 
 ```{js}
 /* PCN - Fire Permafrost Data Paper
@@ -20,40 +41,33 @@ Measurement years pulled from R script for cleaning and combining data contribut
    2001, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2023
 Edit years in line #16 and #17
 
+Year 2016 is too big and needs to be split by country code
 */
 
 // Define year
-var year = "2001"
-var yr = 2001
-var country = "US"
+var year = "2016"
+var yr = 2016
+var country = "US" // switch between "US" and "CA" for 2016
 
-// ERA5 data and aoi
-var era5 = ee.ImageCollection("ECMWF/ERA5_LAND/HOURLY"),
+// ERA5 data
+var era5 = ee.ImageCollection("ECMWF/ERA5_LAND/HOURLY")
     
-    aoi = 
-    /* color: #d63000 */
-    /* displayProperties: [
-      {
-        "type": "rectangle"
-      }
-    ] */
-    ee.Geometry.Polygon(
-        [[[-5.159694522180871, 77.04702477015937],
-          [-5.159694522180871, 48.829200881613126],
-          [306.3246804778192, 48.829200881613126],
-          [306.3246804778192, 77.04702477015937]]], null, false);
+
 
 // Read in point shapefile
 // var pts = ee.FeatureCollection("projects/ee-pcn-alt-fire-synthesis/assets/AllDataPtsRemoveJulianNA");//
 
-var pts = ee.FeatureCollection("projects/ee-pcn-alt-fire-synthesis/assets/AllDataPts")
+var pts = ee.FeatureCollection("projects/ee-pcn-alt-fire-synthesis/assets/PermafrostFireEcozoneDatacube")
 print('Distinct years', pts.distinct('year')); //data collection year
 
 // Filter for all points collected in given year
-pts = pts.filter(ee.Filter.eq("year",  yr));// change year 
+// pts = pts.filter(ee.Filter.eq("year",  yr));// change year 
 
+
+// pts = pts.filter(ee.Filter.eq("plotId", "1-1"))
+print(pts, "pt")
 // Filter 2016 for country as well
-// pts = pts.filter(ee.Filter.eq("year",  yr)).filter(ee.Filter.eq("cntryId",  country));//for 2016 the data needs to be split to avoid and error
+pts = pts.filter(ee.Filter.eq("year",  yr)).filter(ee.Filter.eq("cntryId",  country));//for 2016 the data needs to be split to avoid and error
 // pts = pts.filter(ee.Filter.eq("last_nm",  "Douglas and Jorgenson"))
 
 
@@ -61,7 +75,7 @@ pts = pts.filter(ee.Filter.eq("year",  yr));// change year
 Map.setCenter(-177.9, 67.5, 2)
 
 // add points to map
-Map.addLayer(pts, {}, 'pts')
+Map.addLayer(pts, {color:"yellow"}, 'pts')
 
 // print(era5.first())
 
@@ -78,7 +92,7 @@ var vis = {
 
 
 var startDate = ee.Date(year+'-02-01') 
-var endDate = ee.Date(year+'-11-01') 
+var endDate = ee.Date(year+'-12-30') 
 
 var dataset = ee.ImageCollection("ECMWF/ERA5_LAND/DAILY_RAW")
                 .select('temperature_2m')
@@ -119,7 +133,7 @@ Map.addLayer(study_area.first())
 
 
 
-var filterByDay = study_area.filter(ee.Filter.bounds(roi)).toBands()
+var filterByDay = study_area.filter(ee.Filter.bounds(pts)).toBands()
 
 print('filter', filterByDay)
 
@@ -146,11 +160,16 @@ var data_extract = input_img.sampleRegions({
 });
 
 
+var test = data_extract.filter(ee.Filter.eq("plotId", "1-1"))
+print(test, "test pt")
 
 Export.table.toDrive({
   collection:data_extract,
-  description:year+'ERA5DailyMeanT2M', //+country, //add +country for 2016 data
+  description:year+'ERA5DailyMeanT2M' +country, //add +country for 2016 data
   folder: 'EarthEngine',
   fileFormat:'CSV'});
+
+
+
 
 ```
