@@ -32,7 +32,7 @@ glimpse(data)
 ```
 ```{r}
 ( manies = data %>% filter(lastNm=="Manies") %>%filter(id <=41) )
-unique(manies$msrDOY)
+unique(manies$msrDoy)
 ```
 
 ```{r}
@@ -51,8 +51,8 @@ F. Multiply thaw depth measure by C
 ```{r}
 calc_A = function(x) {
   x %>% 
-    group_by(year, id, lastNm, msrDOY) %>%
-    filter(TempDoy < msrDOY) %>%
+    group_by(year, id, lastNm, msrDoy) %>%
+    filter(TempDoy < msrDoy) %>%
   filter(TempC > 0) %>%
     arrange(TempDoy) %>%
   summarize( 
@@ -68,7 +68,7 @@ calc_A = function(x) {
 
 calc_B = function(x) {
   x %>% 
-    group_by(year, id, lastNm, msrDOY) %>%
+    group_by(year, id, lastNm, msrDoy) %>%
     filter(TempDoy < predDoy) %>%
   filter(TempC > 0) %>%
     arrange(TempDoy) %>%
@@ -92,21 +92,22 @@ calc_B = function(x) {
 
 ## Figure out na data in Manies id 1-41
 ```{r}
-calc_A_data %>% filter(lastNm=="Manies") %>% filter(id <=41)
+calc_A_data %>% filter(lastNm=="Manies") 
 ```
 
-```{r}
-manies %>% 
-    group_by(year, id, lastNm, msrDOY) %>%
-    filter(TempDoy < msrDOY) %>%
-  filter(TempC > 0) %>%
-    arrange(TempDoy) %>% 
-  filter(id <=41)
 
-```
-3365- 3484
+
 ### Filter original data 
 ```{r}
+( orgData = data %>% 
+  group_by(year, id, lastNm) %>%
+  filter(TempDoy == predDoy)
+)
+  
+```
+
+
+```{r eval=FALSE, include=FALSE}
 ( 
   orgData = data %>% 
   dplyr::select(plotId:predDoy) %>%
@@ -119,8 +120,8 @@ manies %>%
 ### Join Calculations with Orginial
 ```{r}
 ( dataCombine = orgData %>% 
-    full_join(y=calc_A_data, by=c("year", "id", 'lastNm', 'msrDOY')) %>%
-    full_join(y=calc_B_data, by=c("year", "id", 'lastNm', 'msrDOY')) %>%
+    full_join(y=calc_A_data, by=c("year", "id", 'lastNm', 'msrDoy')) %>%
+    full_join(y=calc_B_data, by=c("year", "id", 'lastNm', 'msrDoy')) %>%
     mutate(A_sum = ifelse(is.na(A_sum), 0, A_sum),
            A =ifelse(is.na(A), 0, A)) %>%
     mutate(C = B/A) %>%
@@ -129,15 +130,14 @@ manies %>%
 ```
 
 # Remove outliers, na, and INF
-```{r}
-unique(dataCombine$distur)
-```
+
 
 ```{r}
-dataCombine %>% 
+( cleanDataCombine = dataCombine %>% 
     filter(msrDepth < 1000) %>% 
     drop_na(predDepth) %>% 
     filter_at(vars(predDepth), all_vars(!is.infinite(.))) 
+)
 
 ```
 
@@ -150,17 +150,14 @@ dataCombine %>% filter(is.na(msrDepth))
 
 unique(inf$submitNm)
 
-inf %>% filter(submitNm == "Dieleman")
-inf %>% filter(submitNm == "Holloway")
-
-inf %>% filter(submitNm == "Olefeldt")
-inf %>% filter(submitNm == "Natali")
+inf %>% filter(submitNm == "Manies") # n=95 infities values for msrPred
+inf %>% filter(submitNm == "Natali") # n=93 infintie values for msrPred
 
 ```
 
 ### Write to csv
 
 ```{r}
-write.csv(dataCombine, file = "../outputs/dataCube/DatacubePermafrostFirePredicted.csv", row.names=FALSE)
+write.csv(cleanDataCombine, file = "../outputs/dataCube/DatacubePermafrostFirePredicted.csv", row.names=FALSE)
 ```
 
