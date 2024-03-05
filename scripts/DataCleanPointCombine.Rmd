@@ -536,8 +536,9 @@ str(f12)
   mutate(paired = ifelse(site_id %in% c('ANKB', 'ANKU'), "l1",
                   ifelse(site_id %in% c('BCB', 'BCU'), "l2",
                   ifelse(site_id %in% c('HCB', 'HCU'), "l3",
-                  ifelse(site_id %in% c('NCB_OLD', 'NCB_NEW'), "l4",
-                  ifelse(site_id %in% c('YKDB', 'YKDU'), "l5", "l6")))))) %>%
+                  ifelse(site_id %in% c('NCB_OLD', 'NCU_OLD'), "l4",
+                  ifelse(site_id %in% c('NCB_NEW', 'NCU_NEW'), "l5",
+                  ifelse(site_id %in% c('YKDB', 'YKDU'), "l6", "l6"))))))) %>%
     #drop_na(lat, long) %>%
     mutate(submitNm="Natali")
 )

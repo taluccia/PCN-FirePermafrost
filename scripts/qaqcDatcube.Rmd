@@ -201,36 +201,51 @@ datacubePred %>% filter(msrDepth < 0)
 
 ```
 
-# Filter out data with errors
-This includes a negative thaw depth
 
-Note from Olefeldt --  all three look like typos. Our thaw rod only is 150 cm, so all numbers need to be within that. 
 ```{r}
 datacubePred
 ```
-```{r}
-( 
-  datacubePredClean = datacubePred %>% 
-  filter(!msrDepth < 0) %>% # Remove Olefeldt negative measurements (also removes msrDepth with NA)
-  filter(!msrDepth %in% c(4501, 453, 1032))
-)
-```
 
-%>% 
-    filter(msrDepth < 1000) %>% 
-    drop_na(predDepth) %>% 
-    filter_at(vars(predDepth), all_vars(!is.infinite(.)))
+# Check pairs 
 
 ```{r}
-setdiff( datacubePred, datacubePredClean)
+( rocha = datacubePred %>% 
+  mutate(TimeSinceFire = year-fireYr) %>%
+  filter(lastNm=="Rocha") )
+rocha %>% filter(siteId=="Anaktuvuk River fire")
+unique(rocha$fireYr)
+unique(rocha$siteId)
 ```
+```{r}
+issue = datacubePred %>% 
+  mutate(TimeSinceFire = year-fireYr) %>%
+  filter(paired %in% c("p5", "p6"))
+issue %>% filter(distur=="unburned")
+issue %>% filter(siteId=="Jones Old Burn")
+
+
+unique(issue$siteId)
+unique(issue$distur)
+```
+```{r}
+datacubePred %>% 
+  mutate(TimeSinceFire = year-fireYr) %>%
+  filter(lastNm=="Natali") %>%
+  group_by(siteId, distur, paired, fireYr) %>%
+  summarize(n=n())
+```
+
 
 ```{r}
-datacubePredClean %>% filter(is.na(predDepth))
+ncu_old = issue %>% filter(siteId=="NCU_OLD")
+ncu_new = issue %>% filter(siteId=="NCU_NEW")
+ykd = issue %>% filter(siteId=="YKD")
+ykd
+unique(ncu_old$fireYr)
+unique(ncu_new$fireYr)
+unique(ykd$fireYr)
 ```
-
-```{r eval=FALSE, include=FALSE}
-write.csv(datacubePredClean, file = "../outputs/dataCube/datacubePredClean.csv", row.names = FALSE)
+```{r}
+write_csv(ykd, '../outputs/YKDmissingFireYear.csv')
 ```
-
 **THE END**

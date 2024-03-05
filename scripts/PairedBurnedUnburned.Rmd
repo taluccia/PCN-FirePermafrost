@@ -1,5 +1,5 @@
 ---
-title: "Paired Burned Unburned"
+title: " Analysis Paired Burned Unburned"
 author: "Anna Talucci"
 date: "2024-02-23"
 output: html_document
@@ -36,47 +36,46 @@ comp_theme = theme_bw() + theme(legend.position = "bottom") +
 
 ## Predicted measurements
 ```{r}
-datacubePred = read_csv("../data/dataCube/datacubePredClean.csv")
+datacubePred = read_csv("../data/dataCube/DatacubePermafrostFirePredicted.csv")
 ```
 
 ```{r}
 datacubePred
 ```
 
-# Remove
-
-```{r}
-( datacubePred1 = datacubePred %>% 
-    filter(msrDepth < 1000) %>% 
-    drop_na(predDepth) %>% 
-    filter_at(vars(predDepth), all_vars(!is.infinite(.))) 
-
-  )
-```
-```{r}
-datacubePred1 %>% filter(is.na(ECO_NAME)) 
-```
-
 # aggregate burn and unburned pairs
 
 ```{r}
-( aggregate = datacubePred1 %>% 
-  group_by(biome, ECO_NAME, submitNm, distur, paired) %>%
-  summarise(avgPredDepth = mean(predDepth)) 
-)
+datacubePred$fireYr[datacubePred$siteId == "Anaktuvuk River fire"] <- 2007
+
+aggregate = datacubePred %>% 
+     mutate(TimeSinceFire = year-fireYr) %>%
+  group_by(biome, resName, submitNm, distur, paired) %>%
+  summarise(avgPredDepth = mean(predDepth),
+            meanTSF = mean(TimeSinceFire)) 
+
+aggregate$meanTSF[aggregate$distur == "unburned"] <- -9999
+
+( aggregate1 = aggregate %>% mutate(meanTSF = round(meanTSF,0)) )
+
+aggregate1 %>% filter(meanTSF > 1000)
 ```
+
+# Palettes
+
 ```{r}
 ecoPalette = c('#a6cee3','#1f78b4',"#00bfa0",'#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00',"#dc0ab4",'#b2df8a','#ffff99', '#CC6677', '#DDCC77')
 ```
 
+# Plot
+
 ```{r}
-
-ggplot(aggregate, aes(x = distur, y=avgPredDepth, color=ECO_NAME)) +
-
+ggplot(aggregate, aes(x = distur, y=avgPredDepth, color=meanTSF)) +
   geom_boxplot() +
-  scale_color_manual(values=ecoPalette) +
   labs(x="", y="Depth (cm)") +
+  facet_wrap(~resName) +
   comp_theme 
-  
-
 ```
+
+
+# Test difference in means between burn and unburned and time since fire

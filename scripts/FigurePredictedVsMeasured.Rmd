@@ -37,35 +37,25 @@ comp_theme = theme_bw() + theme(legend.position = "none") +
 
 ## Predicted measurements
 ```{r}
-datacubePred = read_csv("../data/dataCube/datacubePredClean.csv")
+datacubePred = read_csv("../data/dataCube/DatacubePermafrostFirePredicted.csv")
 ```
 
 ```{r}
 datacubePred
 ```
 
-# Remove
 
-```{r}
-( datacubePred1 = datacubePred %>% 
-    filter(msrDepth < 1000) %>% 
-    drop_na(predDepth) %>% 
-    filter_at(vars(predDepth), all_vars(!is.infinite(.)))
-  )
-```
 
 # Filter and sampling
-
-
 
 ## Data for Date figure
 ```{r}
 ( forDates = datacubePred1 %>% 
-    dplyr::select(plotId, siteId, msrType, msrDOY, predDoy) %>%
+    dplyr::select(plotId, siteId, msrType, msrDoy, predDoy) %>%
     pivot_longer(
     cols = ends_with("doy"),
     names_to = "msrPrd",
-    values_to = "DoY")
+    values_to = "Doy")
 )
 ```
 
@@ -85,10 +75,10 @@ datacubePred
 ```{r}
 forDates %>% 
   group_by(msrType, msrPrd) %>%
-  summarise(mean= mean(DoY),
-            sd = sd(DoY),
-            min = min(DoY),
-            max = max(DoY))
+  summarise(mean= mean(Doy),
+            sd = sd(Doy),
+            min = min(Doy),
+            max = max(Doy))
 ```
 
 ```{r}
@@ -107,9 +97,9 @@ forDepth %>%
 ( fig1 = forDates %>% 
     filter(msrType=="thaw") %>% 
     mutate(msrPrd = fct_recode(msrPrd,
-                                  "Measured" = "msrDOY",
+                                  "Measured" = "msrDoy",
                                   "Predicted" = "predDoy")) %>%
-ggplot(., aes(x = msrPrd, y=DoY)) +
+ggplot(., aes(x = msrPrd, y=Doy)) +
   geom_violin() + 
   
   geom_boxplot(width=0.1) +
@@ -124,9 +114,9 @@ ggplot(., aes(x = msrPrd, y=DoY)) +
 ( fig2 = forDates %>% 
     filter(msrType=="active") %>% 
     mutate(msrPrd = fct_recode(msrPrd,
-                                  "Measured" = "msrDOY",
+                                  "Measured" = "msrDoy",
                                   "Predicted" = "predDoy")) %>%
-ggplot(., aes(x = msrPrd, y=DoY)) +
+ggplot(., aes(x = msrPrd, y=Doy)) +
   geom_violin() + 
   
   geom_boxplot(width=0.1) +
@@ -140,9 +130,9 @@ ggplot(., aes(x = msrPrd, y=DoY)) +
 ```{r}
 ( figDoy = forDates %>% 
     mutate(msrPrd = fct_recode(msrPrd,
-                                  "Measured" = "msrDOY",
+                                  "Measured" = "msrDoy",
                                   "Predicted" = "predDoy")) %>%
-ggplot(., aes(x = msrPrd, y=DoY)) +
+ggplot(., aes(x = msrPrd, y=Doy)) +
   geom_violin() + 
   
   geom_boxplot(width=0.1) +
@@ -226,7 +216,7 @@ ggsave("../figures/DepthsMeasurePredictViolin.png", plot = comboDepths, width = 
 ( comboMsrPredViolin =  cowplot::plot_grid(comboDates, comboDepths, ncol=2)  ) 
 ```
 ```{r eval=FALSE, include=FALSE}
-ggsave("../figures/DepthsDoYMsrPredViolin.png", plot = comboMsrPredViolin, width = 6, height =4, units = c("in"), dpi=600, bg = "white" )
+ggsave("../figures/DepthsDoyMsrPredViolin.png", plot = comboMsrPredViolin, width = 6, height =4, units = c("in"), dpi=600, bg = "white" )
 ```
 
 ```{r}
@@ -234,7 +224,7 @@ ggsave("../figures/DepthsDoYMsrPredViolin.png", plot = comboMsrPredViolin, width
 ```
 
 ```{r eval=FALSE, include=FALSE}
-ggsave("../figures/DepthsDoYMsrPred2PlotViolin.png", plot = combo2plotgrid, width = 6, height =3, units = c("in"), dpi=600, bg = "white" )
+ggsave("../figures/DepthsDoyMsrPred2PlotViolin.png", plot = combo2plotgrid, width = 6, height =3, units = c("in"), dpi=600, bg = "white" )
 ```
 
 ## Observed vs predicted
@@ -365,7 +355,10 @@ set.seed(29)
 
 ```
 
+```{r}
+( pairedCombo2 =  cowplot::plot_grid(paired2, paired2, ncol=2,  label_size = 12)  ) 
+```
 
 ```{r}
-ggsave("../figures/DepthsMeasurePredictActivePairedSample1Plot.png", plot = paired2, width = 3, height =3, units = c("in"), dpi=600, bg = "white" )
+ggsave("../figures/DepthsMeasurePredictActivePairedSample1Plot.png", plot = pairedCombo2, width = 6, height =3, units = c("in"), dpi=600, bg = "white" )
 ```

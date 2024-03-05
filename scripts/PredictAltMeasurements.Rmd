@@ -134,8 +134,9 @@ calc_A_data %>% filter(lastNm=="Manies")
 
 ```{r}
 ( cleanDataCombine = dataCombine %>% 
-    filter(msrDepth < 1000) %>% 
     drop_na(predDepth) %>% 
+    filter(!msrDepth < 0) %>% # Remove Olefeldt negative measurements (also removes msrDepth with NA)
+  filter(!msrDepth %in% c(4501, 453, 1032)) %>% # Remove outliers from Olefeldt that are errors confirmed by email
     filter_at(vars(predDepth), all_vars(!is.infinite(.))) 
 )
 
