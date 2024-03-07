@@ -35,11 +35,7 @@ glimpse(data)
 unique(manies$msrDoy)
 ```
 
-```{r}
-( natali = data %>% filter(lastNm=="Natali") %>% filter(year ==2015) %>% filter(id>=3365) %>% filter(id<=3484)) %>% filter(TempDoy>259)
 
-```
-3365- 3484
 # Functions to standarize
 Formula Parts 
 A. Take the square root of the Sum of the total degrees above zero for dates prior to thaw depth measure
@@ -63,7 +59,7 @@ calc_A = function(x) {
 
 ```
 
-**Change Date Depending on geographic location**
+
 ```{r}
 
 calc_B = function(x) {
@@ -90,10 +86,7 @@ calc_B = function(x) {
 ( calc_B_data = calc_B(data) )
 ```
 
-## Figure out na data in Manies id 1-41
-```{r}
-calc_A_data %>% filter(lastNm=="Manies") 
-```
+
 
 
 
@@ -106,16 +99,6 @@ calc_A_data %>% filter(lastNm=="Manies")
   
 ```
 
-
-```{r eval=FALSE, include=FALSE}
-( 
-  orgData = data %>% 
-  dplyr::select(plotId:predDoy) %>%
-  group_by(year, id, lastNm) %>%
-  slice(1) #%>%
-    #dplyr::select(plotId:ECO_NAME, minDate, predDoy)
-)
-```
 
 ### Join Calculations with Orginial
 ```{r}
@@ -130,31 +113,28 @@ calc_A_data %>% filter(lastNm=="Manies")
 ```
 
 # Remove outliers, na, and INF
-
-
 ```{r}
-( cleanDataCombine = dataCombine %>% 
-    drop_na(predDepth) %>% 
-    filter(!msrDepth < 0) %>% # Remove Olefeldt negative measurements (also removes msrDepth with NA)
-  filter(!msrDepth %in% c(4501, 453, 1032)) %>% # Remove outliers from Olefeldt that are errors confirmed by email
-    filter_at(vars(predDepth), all_vars(!is.infinite(.))) 
-)
-
+dataCombine %>% 
+  drop_na(predDepth) %>% 
+    filter_at(vars(predDepth), all_vars(!is.infinite(.)))  
 ```
-
 ```{r}
 dataCombine %>% filter(is.na(msrDepth)) 
 ```
 
 ```{r}
-( inf = dataCombine %>% filter(is.infinite(predDepth)) )
-
-unique(inf$submitNm)
-
-inf %>% filter(submitNm == "Manies") # n=95 infities values for msrPred
-inf %>% filter(submitNm == "Natali") # n=93 infintie values for msrPred
-
+50625-49997
 ```
+
+
+```{r}
+( cleanDataCombine = dataCombine %>% 
+    drop_na(predDepth) %>% 
+    filter_at(vars(predDepth), all_vars(!is.infinite(.))) 
+)
+```
+
+
 
 ### Write to csv
 

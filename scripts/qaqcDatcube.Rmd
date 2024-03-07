@@ -217,16 +217,21 @@ unique(rocha$fireYr)
 unique(rocha$siteId)
 ```
 ```{r}
-issue = datacubePred %>% 
+rocha = datacubePred %>% 
   mutate(TimeSinceFire = year-fireYr) %>%
   filter(paired %in% c("p5", "p6"))
-issue %>% filter(distur=="unburned")
-issue %>% filter(siteId=="Jones Old Burn")
+arf = datacubePred  %>% filter(siteId=="Anaktuvuk River fire")
+job = datacubePred  %>% filter(siteId=="Jones Old Burn")
 
-
-unique(issue$siteId)
-unique(issue$distur)
+rocha
+unique(arf$fireYr)
+unique(job$fireYr)
 ```
+
+```{r}
+write_csv(rocha, '../outputs/RochaMissingFireYear.csv')
+```
+
 ```{r}
 datacubePred %>% 
   mutate(TimeSinceFire = year-fireYr) %>%

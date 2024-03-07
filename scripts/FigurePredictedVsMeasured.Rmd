@@ -50,7 +50,7 @@ datacubePred
 
 ## Data for Date figure
 ```{r}
-( forDates = datacubePred1 %>% 
+( forDates = datacubePred %>% 
     dplyr::select(plotId, siteId, msrType, msrDoy, predDoy) %>%
     pivot_longer(
     cols = ends_with("doy"),
@@ -61,7 +61,7 @@ datacubePred
 
 ## Data for depth figure
 ```{r}
-( forDepth = datacubePred1 %>% 
+( forDepth = datacubePred %>% 
   dplyr::select(plotId, siteId, msrType, msrDepth, predDepth) %>%
     pivot_longer(
     cols = ends_with("Depth"),
@@ -230,7 +230,7 @@ ggsave("../figures/DepthsDoyMsrPred2PlotViolin.png", plot = combo2plotgrid, widt
 ## Observed vs predicted
 
 ```{r}
-ggplot(data=datacubePred1, aes(x=msrDepth, y=predDepth)) +
+ggplot(data=datacubePred, aes(x=msrDepth, y=predDepth)) +
   geom_point() +
   labs(x='Measured depth (cm)', y='Predicted depth (cm)', )
 ```
@@ -239,7 +239,7 @@ ggplot(data=datacubePred1, aes(x=msrDepth, y=predDepth)) +
 ## Small sample for paired figure
 ```{r}
 set.seed(29)
-( sampleActive = datacubePred1 %>% 
+( sampleActive = datacubePred %>% 
   filter(msrType =="active") %>%
   slice_sample(n = 20) %>%
     mutate(paired = row_number()) %>%
@@ -254,7 +254,7 @@ set.seed(29)
 ```
 ```{r}
 set.seed(29)
-( sampleThaw = datacubePred1 %>% 
+( sampleThaw = datacubePred %>% 
   filter(msrType =="thaw") %>%
   slice_sample(n = 20) %>%
     mutate(paired = row_number()) %>%
@@ -278,7 +278,7 @@ set.seed(29)
   geom_line(aes(group = paired),  linetype = "solid", color="gray75", lwd=.5) +
   scale_color_manual(values = c('#7570b3', '#d95f02'), labels = c("Measured", "Predicted"), name="") +
      new_scale_color() +
-        geom_point(aes(fill= msrPrd, color=msrPrd), size=3,  pch=21, stroke =1.8) +
+        geom_point(aes(fill= msrPrd, color=msrPrd), size=3,  pch=21, stroke =1) +
           scale_fill_manual(name="", values=c( "#3b5a9d", "#FEC287FF"))  +
           scale_color_manual(name="", values = c( "grey79", "black")) +
   labs(x="Late season", y="Depth (cm)") +
@@ -299,7 +299,7 @@ set.seed(29)
   geom_line(aes(group = paired),  linetype = "solid", color="gray75", lwd=.5) +
   scale_color_manual(values = c('#7570b3', '#d95f02'), labels = c("Measured", "Predicted"), name="") +
      new_scale_color() +
-        geom_point(aes(fill= msrPrd, color=msrPrd), size=3,  pch=21, stroke =1.8) +
+        geom_point(aes(fill= msrPrd, color=msrPrd), size=3,  pch=21, stroke =1) +
           scale_fill_manual(name="", values=c( "#3b5a9d", "#FEC287FF"))  +
           scale_color_manual(name="", values = c( "grey79", "black")) +
   labs(x="Early season", y="Depth (cm)") +
@@ -321,7 +321,7 @@ ggsave("../figures/DepthsMeasurePredictActivePairedSample.png", plot = pairedCom
 
 ```{r}
 set.seed(29)
-( sample = datacubePred1 %>% 
+( sample = datacubePred %>% 
   slice_sample(n = 30) %>%
     mutate(paired = row_number()) %>%
     dplyr::select(plotId, siteId, paired, msrType, msrDepth, predDepth) %>%
@@ -344,7 +344,7 @@ set.seed(29)
   geom_line(aes(group = paired),  linetype = "solid", color="gray75", lwd=.5) +
   scale_color_manual(values = c('#7570b3', '#d95f02'), labels = c("Measured", "Predicted"), name="") +
      new_scale_color() +
-        geom_point(aes(fill= msrPrd, color=msrPrd), size=3,  pch=21, stroke =1.8) +
+        geom_point(aes(fill= msrPrd, color=msrPrd), size=3,  pch=21, stroke =1) +
           scale_fill_manual(name="", values=c( "#3b5a9d", "#FEC287FF"))  +
           scale_color_manual(name="", values = c( "grey79", "black")) +
   labs(x="", y="Depth (cm)") +

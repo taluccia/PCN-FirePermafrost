@@ -141,12 +141,16 @@ resWwfPt %>% filter(is.na(msrDoy))
 ```{r eval=FALSE, include=FALSE}
 st_write(resWwfPt, "../outputs/spatialDataCreate/PermafrostFireEcozoneDatacube.shp", driver="ESRI Shapefile")
 ```
+
+
 ```{r eval=FALSE, include=FALSE}
 st_write(diaz, "../outputs/spatialDataCreate/diaz.shp", driver="ESRI Shapefile")
 ```
+
 ```{r eval=FALSE, include=FALSE}
 st_write(tunBorWwf, "../outputs/spatialDataCreate/WwfEcoregionsTunBor.shp", driver="ESRI Shapefile")
 ```
+
 ```{r}
 unique(resWwfPt$wwfName)
 ```

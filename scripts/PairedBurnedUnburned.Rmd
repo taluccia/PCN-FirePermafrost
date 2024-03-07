@@ -43,11 +43,21 @@ datacubePred = read_csv("../data/dataCube/DatacubePermafrostFirePredicted.csv")
 datacubePred
 ```
 
+
+```{r}
+datacubePred %>% filter(plotId %in% c('RT1', 'RT2', 'RT3', 'RT4', '1', '4', '4b', '5', 'B1', 'B2', 'B3'))
+```
+
+```{r}
+datacubePred$fire_year[datacubePred$plotId %in% c('RT1', 'RT2', 'RT3', 'RT4', '1', '4', '4b', '5', 'B1', 'B2', 'B3')] <- 2015
+```
+```{r}
+datacubePred$fireYr[datacubePred$siteId == "Anaktuvuk River fire"] <- 2007
+```
+
 # aggregate burn and unburned pairs
 
 ```{r}
-datacubePred$fireYr[datacubePred$siteId == "Anaktuvuk River fire"] <- 2007
-
 aggregate = datacubePred %>% 
      mutate(TimeSinceFire = year-fireYr) %>%
   group_by(biome, resName, submitNm, distur, paired) %>%
@@ -60,6 +70,7 @@ aggregate$meanTSF[aggregate$distur == "unburned"] <- -9999
 
 aggregate1 %>% filter(meanTSF > 1000)
 ```
+
 
 # Palettes
 
