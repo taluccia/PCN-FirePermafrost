@@ -103,12 +103,23 @@ str(f1)
 )
 ```
 
+```{r}
+# Check na for specific columns
+f1 %>% filter(is.na(lat)) 
+f1 %>% filter(is.na(long)) 
+f1 %>% filter(is.na(year)) 
+f1 %>% filter(is.na(month))
+f1 %>% filter(is.na(day)) 
+f1 %>% filter(is.na(fire_year)) 
+f1 %>% filter(is.na(thaw_depth)) 
+```
 
 ```{r}
 # distinct site pairs
 f1_dates %>% distinct(site_id, plot_id, fire_id, burn_unburn) 
 f1_dates %>% distinct(msrDoy, year, date)
 ```
+
 
 ## 2. Breen
 ```{r}
@@ -137,6 +148,17 @@ unique(f2$year)
 ```
 
 ```{r}
+# Check na for specific columns
+f2_dates %>% filter(is.na(lat)) 
+f2_dates %>% filter(is.na(long)) 
+f2_dates %>% filter(is.na(year)) 
+f2_dates %>% filter(is.na(month))
+f2_dates %>% filter(is.na(day)) 
+f2_dates %>% filter(is.na(fire_year)) %>% filter(burn_unburn=="burned")
+f2_dates %>% filter(is.na(thaw_depth)) 
+```
+
+```{r}
 # Look at distinct identifiers
 f2_dates %>% distinct(site_id, plot_id, burn_unburn) 
 f2_dates %>% distinct(msrDoy, year, date)
@@ -161,6 +183,17 @@ f3$site_id <- paste(f3$site_id, sapply(strsplit(f3$plot,"_"),"[[",2), sep="_" )
 f3$long <- ifelse(f3$long > 0, -f3$long,f3$long)
 ```
 NOTE---The Dalton and the Steese are larger "sites," each of which has a lot of plots in them.  But those plots do vary, so don't aggregate.  At the Dalton, there are sites with 0 (unburned), 1 (one fire, which would be 2004/2005 era), 2 fires (which would be 1970's era AND 2004 or 2005), or 3 fires (which would be 1950's, 1970's, and 2004 or 2005.  So if aggregating, what you'd want to do would be to aggregate by those treatments (0, 1, 2, or 3 fires) within the Dalton or Steese "sites."  So, sounds like you'd want to aggregate all the unburned plots at the Dalton, all the 1 burn plots at the Dalton, etc.  I would not aggregate Dalton and Steese plots together, they are functionally different sites (uplands vs. low lands, respectively).
+
+```{r}
+# Check na for specific columns
+f3 %>% filter(is.na(lat)) 
+f3 %>% filter(is.na(long)) 
+f3 %>% filter(is.na(year)) 
+f3 %>% filter(is.na(month))
+f3 %>% filter(is.na(day)) 
+f3 %>% filter(is.na(fire_year)) 
+f3 %>% filter(is.na(thaw_depth)) 
+```
 
 ```{r}
 f3
@@ -203,6 +236,18 @@ f4$thaw_active <- read.csv(f[4], header = TRUE, colClasses = "character")[,20]
 f4 %>% dplyr::select(plot_id, pairUnb) %>% group_by(pairUnb) %>% 
        arrange(., desc(pairUnb))
 ```
+
+```{r}
+# Check na for specific columns
+f4 %>% filter(is.na(lat)) 
+f4 %>% filter(is.na(long)) 
+f4 %>% filter(is.na(year)) 
+f4 %>% filter(is.na(month))
+f4 %>% filter(is.na(day)) 
+f4 %>% filter(is.na(fire_year)) 
+f4 %>% filter(is.na(thaw_depth)) 
+```
+
 ```{r}
 (
   f4_dates = f4 %>%
@@ -255,6 +300,17 @@ f5 %>% filter(lat>89)
 ```
 
 ```{r}
+# Check na for specific columns
+f5 %>% filter(is.na(lat)) 
+f5 %>% filter(is.na(long)) 
+f5 %>% filter(is.na(year)) 
+f5 %>% filter(is.na(month))
+f5 %>% filter(is.na(day)) 
+f5 %>% filter(is.na(fire_year)) 
+f5 %>% filter(is.na(thaw_depth)) 
+```
+
+```{r}
 (
   f5_dates = f5 %>%
   mutate(date = as.Date(with(., paste(year, month, day,sep="-")), "%Y-%m-%d")) %>%
@@ -268,7 +324,8 @@ f5 %>% filter(lat>89)
                   ifelse(plot_id %in% c('SS33-1', 'SS33-11', 'SS33-21', 'SS33-25', 'SS33-26', 'SS33-27', 'SS33-3', 'SS33-582', 'SS33-6', 'SS33-877', 'SS33-9', 'KAK-UB-1'), "e7", 
                   ifelse(plot_id %in% c('ZF20-10', 'ZF20-11', 'ZF20-12', 'ZF20-125', 'ZF20-4', 'ZF20-40', 'ZF20-43', 'ZF20-6', 'ZF20-8', 'ZF20-9', 'ZF20-9', 'HWY3-UB-1'), "e8",
                 ifelse(plot_id %in% c('ZF26-104', 'ZF26-112', 'ZF26-113', 'ZF26-118', 'ZF26-5', 'ZF26-50', 'ZF26-6', 'ZF26-66', 'ZF26-7', 'ZF26-96', 'ZF26-98', 'WEK-UB-1'), "e9", "NA")))))))))) %>%
-    mutate(submitNm="Dieleman")
+    mutate(submitNm="Dieleman") %>%
+    filter(lat < 89)  # Remove Dielman lat 90
 )
 ```
 
@@ -290,7 +347,16 @@ str(f6)
 ## fix incorrect logical columns
 f6$slope <- read.csv(f[6], header = TRUE, colClasses = "character")[,20]
 ```
-
+```{r}
+# Check na for specific columns
+f6 %>% filter(is.na(lat)) 
+f6 %>% filter(is.na(long)) 
+f6 %>% filter(is.na(year)) 
+f6 %>% filter(is.na(month))
+f6 %>% filter(is.na(day)) 
+f6 %>% filter(is.na(fire_year)) 
+f6 %>% filter(is.na(thaw_depth)) 
+```
 ```{r}
 f6_dates = f6 %>%
   mutate(date = as.Date(with(., paste(year, month, day,sep="-")), "%Y-%m-%d")) %>%
@@ -320,6 +386,17 @@ str(f7)
 
 ```{r}
 f7$thaw_active <- read.csv(f[7], header = TRUE, colClasses = "character")[,19]
+```
+
+```{r}
+# Check na for specific columns
+f7 %>% filter(is.na(lat)) 
+f7 %>% filter(is.na(long)) 
+f7 %>% filter(is.na(year)) 
+f7 %>% filter(is.na(month))
+f7 %>% filter(is.na(day)) 
+f7 %>% filter(is.na(fire_year)) %>% filter(burn_unburn=="burned")
+f7 %>% filter(is.na(thaw_depth)) 
 ```
 
 ```{r}
@@ -357,6 +434,17 @@ f8$gt_probe <- "n"
 
 # organic depth is missing, but set to NA
 f8$organic_depth <- as.numeric(f8$organic_depth)
+```
+
+```{r}
+# Check na for specific columns
+f8 %>% filter(is.na(lat)) 
+f8 %>% filter(is.na(long)) 
+f8 %>% filter(is.na(year)) 
+f8 %>% filter(is.na(month))
+f8 %>% filter(is.na(day)) 
+f8 %>% filter(is.na(fire_year)) 
+f8 %>% filter(is.na(thaw_depth)) 
 ```
 
 ```{r}
@@ -400,6 +488,17 @@ unique(f9$slope)
 # Check gt_probe yes
 gtProbeYes = filter(f9, gt_probe=="y")
 unique(gtProbeYes$thaw_depth)
+```
+
+```{r}
+# Check na for specific columns
+f9 %>% filter(is.na(lat)) 
+f9 %>% filter(is.na(long)) 
+f9 %>% filter(is.na(year)) 
+f9 %>% filter(is.na(month))
+f9 %>% filter(is.na(day)) 
+f9 %>% filter(is.na(fire_year)) %>% filter(burn_unburn == "burned")
+f9 %>% filter(is.na(thaw_depth)) 
 ```
 
 ```{r}
@@ -450,7 +549,16 @@ str(f10)
 glimpse(f10)
 ```
 
-
+```{r}
+# Check na for specific columns
+f10 %>% filter(is.na(lat)) 
+f10 %>% filter(is.na(long)) 
+f10 %>% filter(is.na(year)) 
+f10 %>% filter(is.na(month))
+f10 %>% filter(is.na(day)) 
+f10 %>% filter(is.na(fire_year)) 
+f10 %>% filter(is.na(thaw_depth)) 
+```
 
 
 ```{r}
@@ -485,6 +593,18 @@ f11 = f11 %>%
   mutate(organic_depth = (na.strings = "unk")) %>%
      as.data.frame() 
 ```
+
+```{r}
+# Check na for specific columns
+f11 %>% filter(is.na(lat)) 
+f11 %>% filter(is.na(long)) 
+f11 %>% filter(is.na(year)) 
+f11 %>% filter(is.na(month))
+f11 %>% filter(is.na(day)) 
+f11 %>% filter(is.na(fire_year)) 
+f11 %>% filter(is.na(thaw_depth)) 
+```
+
 
 ```{r}
 f11_dates = f11 %>%
@@ -524,6 +644,23 @@ f12$long = as.numeric(gsub(",","",f12$long))
 f12$long <- ifelse(f12$long > 0, -f12$long,f12$long)
 ```
 
+
+```{r}
+f12$fire_year[f12$plot_id %in% c('RT1', 'RT2', 'RT3', 'RT4', '1', '4', '4b', '5', 'B1', 'B2', 'B3')] <- 2015
+```
+
+```{r}
+# Check na for specific columns
+f12 %>% filter(is.na(lat)) 
+f12 %>% filter(is.na(long)) 
+f12 %>% filter(is.na(year)) 
+f12 %>% filter(is.na(month))
+f12 %>% filter(is.na(day)) 
+f12 %>% filter(is.na(fire_year)) %>% filter(burn_unburn %in% c("burn", "Burned", "burned", "Burn"))
+f12 %>% filter(is.na(thaw_depth)) 
+```
+
+
 ```{r}
 str(f12)
 ```
@@ -548,10 +685,7 @@ str(f12)
 f12_dates %>% filter(long >0)
 ```
 
-```{r}
-f12_dates[is.na(f12_dates$lat),]
-f12_dates[is.na(f12_dates$long),]
-```
+
 ```{r}
 unique(f12_dates$site_id)
 f12_dates %>% group_by(thaw_active, site_id) %>% count(.)
@@ -579,6 +713,19 @@ f13$thaw_depth <- as.numeric(gsub(">", "",f13$thaw_depth))
 
 f13 %>% distinct(site_id,year,month,day,fire_id,burn_unburn)
 ```
+
+
+```{r}
+# Check na for specific columns
+f13 %>% filter(is.na(lat)) 
+f13 %>% filter(is.na(long)) 
+f13 %>% filter(is.na(year)) 
+f13 %>% filter(is.na(month))
+f13 %>% filter(is.na(day)) 
+f13 %>% filter(is.na(fire_year)) %>% filter(burn_unburn=="burned")
+f13 %>% filter(is.na(thaw_depth)) 
+```
+
 
 ```{r}
 ( 
@@ -617,6 +764,18 @@ f14 %>% distinct(site_id,year,month,day,fire_id,burn_unburn)
 ```
 
 ```{r}
+# Check na for specific columns
+f14 %>% filter(is.na(lat)) 
+f14 %>% filter(is.na(long)) 
+f14 %>% filter(is.na(year)) 
+f14 %>% filter(is.na(month))
+f14 %>% filter(is.na(day)) 
+f14 %>% filter(is.na(fire_year)) %>% filter(burn_unburn=="burned")
+f14 %>% filter(is.na(thaw_depth)) 
+```
+
+
+```{r}
 str(f14)
 ```
 
@@ -632,7 +791,9 @@ str(f14)
                   ifelse(site_id %in% c('samba_1967', 'samba_2013', 'samba_unburn'), "n5",
                   ifelse(site_id %in% c('scotty_2014', 'scotty_unburn'), "n6", "n7"))))))) %>%
   #dplyr::select(-fire_id) %>%
-    mutate(submitNm="Olefeldt")
+    mutate(submitNm="Olefeldt") %>%
+    filter(!thaw_depth < 0) %>% # Remove Olefeldt negative measurements (also removes msrDepth with NA)
+  filter(!thaw_depth %in% c(4501, 453, 1032)) # Remove outliers from Olefeldt that are errors confirmed by email
 )
 ```
 
@@ -659,6 +820,18 @@ f15 %>% distinct(site_id,year,month,day,fire_id,burn_unburn)
 ```{r}
 str(f15)
 ``` 
+
+```{r}
+# Check na for specific columns
+f15 %>% filter(is.na(lat)) 
+f15 %>% filter(is.na(long)) 
+f15 %>% filter(is.na(year)) 
+f15 %>% filter(is.na(month))
+f15 %>% filter(is.na(day)) 
+f15 %>% filter(is.na(fire_year)) 
+f15 %>% filter(is.na(thaw_depth)) 
+```
+
 
 ```{r}
 ( 
@@ -692,6 +865,9 @@ f15_dates %>% distinct(msrDoy, year, date)
 f16 <- read.csv(f[16], header = TRUE)
 f16
 ```
+```{r}
+f16 %>% filter(is.na(thaw_depth))
+```
 
 ```{r}
 # fix incorrect logical columns
@@ -700,6 +876,24 @@ f16$slope <- read.csv(f[16], header = TRUE, colClasses = "character")[,20]
 f16$organic_depth <- as.numeric(f16$organic_depth)
 # convert thaw depth to numeric - blank cells have a period, and will be converted to NA
 f16$thaw_depth <- as.numeric(f16$thaw_depth)
+```
+
+```{r}
+# Check na for specific columns
+f16 %>% filter(is.na(lat)) 
+f16 %>% filter(is.na(long)) 
+f16 %>% filter(is.na(year)) 
+f16 %>% filter(is.na(month))
+f16 %>% filter(is.na(day)) 
+f16 %>% filter(is.na(fire_year)) %>% filter(burn_unburn =="burned")
+f16 %>% filter(is.na(thaw_depth)) 
+```
+
+```{r}
+missingDepth = f16 %>% filter(is.na(thaw_depth))
+```
+```{r}
+write_csv(missingDepth, '../outputs/RochaMissingDepth.csv')
 ```
 
 ```{r}
@@ -736,6 +930,18 @@ str(f17)
 ```
 
 ```{r}
+# Check na for specific columns
+f17 %>% filter(is.na(lat)) 
+f17 %>% filter(is.na(long)) 
+f17 %>% filter(is.na(year)) 
+f17 %>% filter(is.na(month))
+f17 %>% filter(is.na(day)) 
+f17 %>% filter(is.na(fire_year)) 
+f17 %>% filter(is.na(thaw_depth)) 
+```
+
+
+```{r}
 (
   f17_dates = f17 %>%
   mutate(date = as.Date(with(., paste(year, month, day,sep="-")), "%Y-%m-%d")) %>%
@@ -764,6 +970,18 @@ str(f18)
 # fix incorrect logical columns
 f18$thaw_active <- read.csv(f[18], header = TRUE, colClasses = "character")[,19]
 ```
+
+```{r}
+# Check na for specific columns
+f18 %>% filter(is.na(lat)) 
+f18 %>% filter(is.na(long)) 
+f18 %>% filter(is.na(year)) 
+f18 %>% filter(is.na(month))
+f18 %>% filter(is.na(day)) 
+f18 %>% filter(is.na(fire_year)) 
+f18 %>% filter(is.na(thaw_depth)) 
+```
+
 
 ```{r}
 (
@@ -853,9 +1071,7 @@ glimpse(f10_clean)
 # Combine into datacube
 
 ```{r}
-dataCube = dplyr::bind_rows(f1_clean, f2_clean, f3_clean, f4_clean, f5_clean, f6_clean, f7_clean, f8_clean, f9_clean, f10_clean, f11_clean, f12_clean, f13_clean, f14_clean, f15_clean, f16_clean, f17_clean, f18_clean) %>%
-  filter(lat < 89) %>% # Remove Dielman lat 90
-  filter(msrDepth < 1000) # Remove measurements over 1000 per Olefeldt email 
+dataCube = dplyr::bind_rows(f1_clean, f2_clean, f3_clean, f4_clean, f5_clean, f6_clean, f7_clean, f8_clean, f9_clean, f10_clean, f11_clean, f12_clean, f13_clean, f14_clean, f15_clean, f16_clean, f17_clean, f18_clean)
 ```
 
 ```{r}
@@ -907,10 +1123,6 @@ glimpse(dataCubePts)
 dataCubePts %>% filter(is.na(msrDoy)) 
 ```
 
-```{r}
-check2016 = dataCubePts %>% filter(year==2016) %>% filter(cntryId=="CA")
-unique(check2016$msrDepth)
-```
 
 ## write to shapefile
 ```{r eval=FALSE, include=FALSE}
