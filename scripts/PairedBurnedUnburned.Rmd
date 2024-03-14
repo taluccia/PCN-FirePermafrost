@@ -44,31 +44,48 @@ datacubePred
 ```
 
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 datacubePred %>% filter(plotId %in% c('RT1', 'RT2', 'RT3', 'RT4', '1', '4', '4b', '5', 'B1', 'B2', 'B3'))
 ```
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 datacubePred$fire_year[datacubePred$plotId %in% c('RT1', 'RT2', 'RT3', 'RT4', '1', '4', '4b', '5', 'B1', 'B2', 'B3')] <- 2015
 ```
-```{r}
+```{r eval=FALSE, include=FALSE}
 datacubePred$fireYr[datacubePred$siteId == "Anaktuvuk River fire"] <- 2007
 ```
 
+# Missing fire year
+
+```{r}
+datacubePred %>% filter(is.na(fireYr))
+```
 # aggregate burn and unburned pairs
 
 ```{r}
 aggregate = datacubePred %>% 
      mutate(TimeSinceFire = year-fireYr) %>%
-  group_by(biome, resName, submitNm, distur, paired) %>%
+  group_by(biome, resName, submitNm, distur, paired, fireYr) %>%
   summarise(avgPredDepth = mean(predDepth),
             meanTSF = mean(TimeSinceFire)) 
 
 aggregate$meanTSF[aggregate$distur == "unburned"] <- -9999
 
-( aggregate1 = aggregate %>% mutate(meanTSF = round(meanTSF,0)) )
+( aggregate1 = aggregate %>% mutate(meanTSF = round(meanTSF,0)) %>% filter(meanTSF < 1000) )
+```
 
-aggregate1 %>% filter(meanTSF > 1000)
+```{r}
+aggregate %>% filter(meanTSF > 1000)
+```
+
+```{r}
+min(aggregate1$meanTSF)
+max(aggregate1$meanTSF)
+unique(aggregate1$meanTSF)
+```
+```{r}
+unique(aggregate1$resName)
+aggregate1 %>% filter(resName=="Yamal-Gydan tundra" )
 ```
 
 
@@ -81,12 +98,45 @@ ecoPalette = c('#a6cee3','#1f78b4',"#00bfa0",'#33a02c','#fb9a99','#e31a1c','#fdb
 # Plot
 
 ```{r}
-ggplot(aggregate, aes(x = distur, y=avgPredDepth, color=meanTSF)) +
+ggplot(aggregate1, aes(x = distur, y=avgPredDepth, color=as.factor(meanTSF))) +
   geom_boxplot() +
   labs(x="", y="Depth (cm)") +
   facet_wrap(~resName) +
   comp_theme 
 ```
 
+```{r}
+( pairedBoxplots = ggplot(aggregate1, aes(x = distur, y=avgPredDepth, color=distur)) +
+  geom_boxplot() +
+  scale_color_manual(values=c('#fc8d59', '#91bfdb'), name="", labels = c('Burned', 'Unburned')) +
+  labs(x="", y="Depth (cm)") +
+  facet_wrap(~resName) +
+  comp_theme +
+     theme(
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank()
+  ) +
+    theme(
+   strip.background = element_rect(
+     color="white", fill="white", size=1.5, linetype="solid"
+     )) +
+    theme(strip.text.x = element_text(size = 6))
+)
+```
+
+```{r eval=FALSE, include=FALSE}
+ggsave("../figures/AggregateBurnedUnburned.png", plot = pairedBoxplots, width = 6, height =5, units = c("in"), dpi=600, bg = "white" )
+```
 
 # Test difference in means between burn and unburned and time since fire
+
+# Model two variable
+
+```{r}
+model1 = lm(avgPredDepth ~ resName:distur + as.factor(meanTSF), data = aggregate1)
+```
+
+```{r}
+summary(model1)
+```
