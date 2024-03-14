@@ -4,7 +4,7 @@ author: "Anna Talucci"
 date: "2024-01-31"
 output: html_document
 ---
-From PCN-Fire-Sysnthesis "Manuscript Map"
+
 
 
 # clear environment
@@ -15,7 +15,7 @@ rm(list=ls())
 
 # Overview
 Creat over view map with permafrost extent and summary of site data.
-Notes:
+Notes:From PCN-Fire-Sysnthesis "Manuscript Map"
 [Better colors for Mapping](https://www.esri.com/arcgis-blog/products/js-api-arcgis/mapping/better-colors-for-better-mapping/)
 # Packages
 ```{r}
