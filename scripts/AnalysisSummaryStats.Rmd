@@ -1,0 +1,48 @@
+---
+title: "General Summary Statistics"
+author: "Anna Talucci"
+date: "2024-03-21"
+output: html_document
+---
+number of sites by burned/unburned, boreal/tundra, continuous/discontinuous/sporadic permafrost
+
+
+# clear environment
+```{r}
+rm(list=ls())
+```
+
+# Overview
+General Summary stats number of sites by burned/unburned, boreal/tundra, continuous/discontinuous/sporadic permafrost
+
+
+
+# Packages
+
+```{r}
+library(tidyverse)
+library(lubridate)
+library(ggpubr)
+library(ggnewscale)
+```
+
+
+# Data
+
+## Predicted measurements
+```{r}
+datacubePred = read_csv("../data/dataCube/DatacubePermafrostFirePredicted.csv")
+```
+
+```{r}
+datacubePred
+```
+
+```{r}
+datacubePred %>% group_by(resName, distur)
+```
+
+
+
+
+
