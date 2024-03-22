@@ -75,7 +75,36 @@ resolve = st_read("../data/spatialData/RESOLVE_Ecoregions_and_Biomes/Biomes_and_
 ```{r}
 resolve
 ```
+## Permafrost
 
+```{r}
+permafrost = st_read("../data/spatialData/permafrost/permaice.shp", "permaice")
+```
+
+```{r}
+permafrost
+```
+
+```{r}
+permafrost_wgs = st_transform(permafrost, crs= st_crs(datacubePts))
+```
+
+```{r}
+permafrost_wgs
+```
+
+```{r}
+plot(permafrost_wgs)
+```
+
+```{r}
+unique(permafrost_wgs$NUM_CODE)
+unique(permafrost_wgs$COMBO)
+unique(permafrost_wgs$RELICT)
+unique(permafrost_wgs$EXTENT)
+unique(permafrost_wgs$CONTENT)
+unique(permafrost_wgs$LANDFORM)
+```
 
 # Filter for WWF Ecoregions
 ```{r}
@@ -138,9 +167,41 @@ resWwfPt %>% filter(is.na(wwfName))
 resWwfPt %>% filter(is.na(msrDoy)) 
 ```
 
-```{r eval=FALSE, include=FALSE}
-st_write(resWwfPt, "../outputs/spatialDataCreate/PermafrostFireEcozoneDatacube.shp", driver="ESRI Shapefile")
+## Add Permafrost extent
+```{r}
+resWwfPt_prj = st_transform(resWwfPt, crs=st_crs(permafrost))
 ```
+
+```{r}
+resWwfPt_prj
+```
+
+
+
+
+
+```{r}
+permResWwfPt = st_join(resWwfPt_prj, permafrost) 
+```
+
+```{r}
+( permResWwfPtRename = permResWwfPt %>% 
+  rename(permaCode = NUM_CODE, permaCombo =COMBO , permaRelict =RELICT , permaExtent= EXTENT, permaCont = CONTENT, permaLand = LANDFORM) )
+```
+
+```{r}
+permResWwfPt_Wgs = st_transform(permResWwfPtRename, crs=4326)
+```
+
+```{r}
+permResWwfPt_Wgs
+```
+
+## write to shapefile
+```{r eval=FALSE, include=FALSE}
+st_write(permResWwfPt_Wgs, "../outputs/spatialDataCreate/PermafrostFireEcozoneDatacube.shp", driver="ESRI Shapefile")
+```
+
 
 
 ```{r eval=FALSE, include=FALSE}
