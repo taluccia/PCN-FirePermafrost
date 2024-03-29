@@ -39,9 +39,21 @@ datacubePred
 ```
 
 ```{r}
-datacubePred %>% group_by(resName, distur)
+datacubePred %>% 
+  group_by(resName, permaExtent, distur) %>%
+  summarize(n= n())
 ```
 
+```{r}
+( ctPermafrost = datacubePred %>% 
+  group_by(permaExtent) %>%
+  summarize(n= n()) %>%
+    mutate(labels = ifelse(permaExtent =="C", "Continuous",
+                           ifelse(permaExtent=="D", "Discontinuous",
+                                  ifelse(permaExtent=="S", "Sporadic", "NA")))) 
+  
+)
+```
 
 
 

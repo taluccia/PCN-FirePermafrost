@@ -26,11 +26,11 @@ library(ggnewscale)
 
 # Plot themes
 ```{r}
-comp_theme = theme_bw() + theme(legend.position = "none") +  
+comp_theme = theme_classic() + theme(legend.position = "none") +  
   theme(panel.grid.major = element_blank()) +
-    theme(axis.title.y = element_text(size = 11, hjust = 0.5, vjust = 1.1),
-        axis.text.x = element_text(size = 10, color = "black"),
-        axis.text.y = element_text(size = 10, color = "black"))
+    theme(axis.title.y = element_text(size = 9, hjust = 0.5, vjust = 1.1),
+        axis.text.x = element_text(size = 8, color = "black"),
+        axis.text.y = element_text(size = 8, color = "black"))
 ```
 
 # Data
@@ -44,7 +44,36 @@ datacubePred = read_csv("../data/dataCube/DatacubePermafrostFirePredicted.csv")
 datacubePred
 ```
 
+# Permafrost frequency plot
+```{r}
+( ctPermafrost = datacubePred %>% 
+  group_by(permaExtent) %>%
+  summarize(n= n()) %>%
+    mutate(labels = ifelse(permaExtent =="C", "Continuous",
+                           ifelse(permaExtent=="D", "Discontinuous",
+                                  ifelse(permaExtent=="S", "Sporadic", "NA")))) 
+  
+)
+```
+## Palettes
 
+```{r}
+permafrost_palette4 = c('#4b2665', '#8774ab', '#d4b9da')
+```
+
+## Figure
+
+```{r}
+( permaFrostPlot = ggplot(data = ctPermafrost, aes(x=labels, y=n, fill=permaExtent)) +
+  geom_bar(stat="identity", width = 0.5) +
+   
+  scale_fill_manual(values = permafrost_palette4) +
+  theme(legend.position = "none") +
+  labs(x="", y="Frequency") +
+    comp_theme  
+  
+)
+```
 
 # Filter and sampling
 
@@ -316,7 +345,7 @@ set.seed(29)
 
 
 ```{r}
-ggsave("../figures/DepthsMeasurePredictActivePairedSample.png", plot = pairedCombo, width = 6, height =3, units = c("in"), dpi=600, bg = "white" )
+ggsave("../figures/DepthsMeasurePredictActivePairedSampleEarlyLate.png", plot = pairedCombo, width = 6, height =3, units = c("in"), dpi=600, bg = "white" )
 ```
 
 ```{r}
@@ -355,10 +384,12 @@ set.seed(29)
 
 ```
 
+# Four panel grid
+
 ```{r}
-( pairedCombo2 =  cowplot::plot_grid(paired2, paired2, ncol=2,  label_size = 12)  ) 
+( combo2plotgrid =  cowplot::plot_grid(figDoy, figDepth, paired2, permaFrostPlot,  ncol=2, labels = c('A', 'B', 'C', 'D'), label_size = 12)  ) 
 ```
 
 ```{r}
-ggsave("../figures/DepthsMeasurePredictActivePairedSample1Plot.png", plot = pairedCombo2, width = 6, height =3, units = c("in"), dpi=600, bg = "white" )
+ggsave("../figures/Plot4PanelPredictedMeasuredPermafrost.png", plot = combo2plotgrid, width = 6, height =4, units = c("in"), dpi=600, bg = "white" )
 ```

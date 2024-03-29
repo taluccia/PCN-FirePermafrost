@@ -36,6 +36,19 @@ datacube
 datacubePred = read_csv("../data/dataCube/DatacubePermafrostFirePredicted.csv")
 ```
 
+# Rock Hits
+
+```{r}
+datacubePred %>% filter(hitRock=="y") %>% group_by(submitNm) %>% summarize(n=n())
+```
+
+# Greater than probe
+
+```{r}
+datacubePred %>% filter(gtProbe=="y") %>% group_by(submitNm) %>% summarize(n=n())
+```
+
+
 # Existing NAs
 
 ## Check missing DOY

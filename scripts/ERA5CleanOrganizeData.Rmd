@@ -92,7 +92,7 @@ names(f2001)
 ```{r}
 selectColDf = function(x)  {
   x %>%
-    dplyr::select(plotId, siteId, cntryId, lastNm, submtNm, lat, lon, year, month, day, biome, distur, fireYr, paired, gtProbe, hitRock, orgDpth, srfH2O, topoPos, slope, vegCvr, msrDoy, msrType, msrDpth, resBiomNm, resBiomeNm, resEcId, resId, resName, resRelm, wwfBiom, wwfEcId, wwfId, wwfName, wwfNum, wwfRelm, contains("temperature_2m")) %>%
+    dplyr::select(plotId, siteId, cntryId, lastNm, submtNm, lat, lon, year, month, day, biome, distur, fireYr, paired, gtProbe, hitRock, orgDpth, srfH2O, topoPos, slope, vegCvr, msrDoy, msrType, msrDpth, resBiomNm, resBiomeNm, resEcId, resId, resName, resRelm, wwfBiom, wwfEcId, wwfId, wwfName, wwfNum, wwfRelm,  permCmb, permCnt, permLnd, permaCd, prmExtn, prmRlct,  contains("temperature_2m")) %>%
     mutate(id = row_number()) -> x
   return(x)
 }
@@ -282,7 +282,7 @@ Combine yearly data frames; rename columns that were truncated by EE.
 ( 
 combineAll = dplyr::bind_rows(combine2001, combine2005, combine2006, combine2007, combine2008, combine2009, combine2010, combine2011, combine2012, combine2013, combine2014, combine2015, combine2016, combine2017, combine2018, combine2019, combine2020, combine2023) %>%
   mutate(predDoy = minDate-14) %>%
-  rename(submitNm = submtNm, orgDepth = orgDpth, msrDepth = msrDpth, resBiomeNo = resBiomNm, resEcoId = resEcId, resRealm = resRelm, wwfBiomeNo = wwfBiom, wwfEcoId = wwfEcId, wwfNo = wwfNum, wwfRealm = wwfRelm)
+  rename(submitNm = submtNm, orgDepth = orgDpth, msrDepth = msrDpth, resBiomeNo = resBiomNm, resEcoId = resEcId, resRealm = resRelm, wwfBiomeNo = wwfBiom, wwfEcoId = wwfEcId, wwfNo = wwfNum, wwfRealm = wwfRelm, permaCombo=permCmb, permaCont =permCnt , permaLand = permLnd, permaCode=permaCd, permaExtent=prmExtn, permaRelict=prmRlct,)
 )
 ```
 
