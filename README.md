@@ -13,16 +13,19 @@
 4. `ERA5CleanOrganizeData.Rmd` --- Take EE ERA5 Land Temperature data and organize it into a single csv
  
 ### QAQC
-1. 
+5. 
 
 ### Analysis
 
-5. `PredictAltMeasurements.Rmd` --- Take
+6. `PredictAltMeasurements.Rmd` --- Take out put from 4
 
 ### Figures
 
-1. `FigureOverviewMap.Rmd` --- overview map with permafrost distribution and data site contribution summaries
-2. `FigurePredictedVsMeasured.Rmd` --- figures looking at the distribution of measured versus predited active layer thickness
+7. `FigureOverviewMap.Rmd` --- overview map with permafrost distribution and data site contribution summaries
+8. `FigurePredictedVsMeasured.Rmd` --- figures looking at the distribution of measured versus predited active layer thickness
+
+### Summaries
+
 
 
 ## Methods
