@@ -21,6 +21,7 @@ library(tidyverse)
 library(lubridate)
 library(ggpubr)
 library(ggnewscale)
+library(ggthemes)
 ```
 
 # Plot themes
@@ -128,6 +129,40 @@ ggplot(aggregate1, aes(x = distur, y=avgPredDepth, color=as.factor(meanTSF))) +
 ```{r eval=FALSE, include=FALSE}
 ggsave("../figures/AggregateBurnedUnburned.png", plot = pairedBoxplots, width = 6, height =5, units = c("in"), dpi=600, bg = "white" )
 ```
+
+
+# Means with error Bars
+```{r}
+aggregate2 = datacubePred %>% 
+     mutate(tsf = year-fireYr) %>%
+  group_by(resName, submitNm, distur, paired, fireYr, year) %>%
+  summarise(avgPredDepth = mean(predDepth),
+            tsf = mean(tsf)) 
+
+aggregate2$tsf[aggregate$distur == "unburned"] <- -9999
+aggregate2
+aggregate3 = aggregate2 %>% filter(meanTSF < 1000) 
+aggregate3
+```
+
+
+```{r}
+( plotMeanError <- ggplot(aggregate2, aes(x = tsf, y=avgPredDepth, color=distur, group=tsf)) +
+    geom_point(size=3, shape=21) +
+      scale_color_manual(values=c('#fc8d59', '#91bfdb'), name="", labels = c('Burned', 'Unburned')) +
+  labs(x="", y="Depth (cm)") +
+  facet_wrap(~resName) +
+  comp_theme +
+    theme(
+   strip.background = element_rect(
+     color="white", fill="white", size=1.5, linetype="solid"
+     )) +
+    theme(strip.text.x = element_text(size = 6))
+)
+```
+
+
+# Repeat measures Time since fire
 
 # Test difference in means between burn and unburned and time since fire
 
