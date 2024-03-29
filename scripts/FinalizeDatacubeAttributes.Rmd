@@ -1,0 +1,98 @@
+---
+title: "Final Attributes"
+author: "Anna Talucci"
+date: "2024-03-27"
+output: html_document
+---
+
+# clear environment
+```{r}
+rm(list=ls())
+```
+
+# Overview
+Finalize datacube attributes
+
+
+# Packages
+
+```{r}
+library(tidyverse)
+library(lubridate)
+library(ggpubr)
+library(ggnewscale)
+library(ggthemes)
+```
+
+
+# Data
+
+## Predicted measurements
+```{r}
+datacubePred = read_csv("../data/dataCube/DatacubePermafrostFirePredicted.csv")
+```
+
+```{r}
+datacubePred
+```
+
+
+```{r}
+names(datacubePred)
+```
+
+
+
+```{r}
+( datacubePred1 = datacubePred %>% 
+  dplyr::select(plotId:resRealm, permaCombo:permaRelict, predDoy, predDepth) %>% 
+  mutate(tsf = year-fireYr)
+)
+```
+
+49,997
+
+```{r}
+write_csv(datacubePred1, '../outputs/dataCube/PermafrostFireDatacubeFinal.csv')
+```
+
+
+```{r}
+names(datacubePred1)
+```
+
+```{r}
+datacubePred1 %>% group_by(submitNm, siteId, paired, fireYr, year) %>% summarize(n = n())
+```
+
+```{r}
+(repeatMeasures = datacubePred1 %>% group_by(submitNm, siteId, paired, fireYr) %>% summarize(numberYrsMeasured = n_distinct(year)) %>% filter(fireYr!=-9999) %>% filter(numberYrsMeasured>1) )
+```
+
+
+```{r}
+write_csv(repeatMeasures, '../outputs/RepeatMeasuresFromDataCube.csv')
+```
+
+```{r}
+datacubePred1 %>% group_by(submitNm, fireYr, year) %>% summarize(n = n())
+```
+
+```{r}
+datacubePred1 %>% filter(submitNm=="Buma") %>% filter(siteId %in% c('STEESE_1','STEESE_2', 'STEESE_3'))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
