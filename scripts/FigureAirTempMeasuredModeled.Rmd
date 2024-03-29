@@ -1,0 +1,104 @@
+---
+title: "Holloway Sites Air temp Measured vs Modeled"
+author: "Anna Talucci"
+date: "2024-03-26"
+output: html_document
+---
+
+# clear environment
+```{r}
+rm(list=ls())
+```
+
+# Overview
+Figures looking at measured versus predicted
+
+
+# Packages
+
+```{r}
+library(tidyverse)
+library(lubridate)
+library(ggpubr)
+library(ggnewscale)
+library(ggthemes)
+library(ggpmisc)
+```
+
+# Plot themes
+```{r}
+comp_theme = theme_bw() + theme(legend.position = "bottom") +  
+  theme(panel.grid.major = element_blank()) +
+    theme(axis.title.y = element_text(size = 11, hjust = 0.5, vjust = 1.1),
+        axis.text.x = element_text(size = 10, color = "black"),
+        axis.text.y = element_text(size = 10, color = "black"))
+```
+
+# Data
+
+## Predicted measurements
+```{r}
+siteData = read_csv("../data/HollowaySites/HollowaySitesLong.csv")
+```
+
+```{r}
+siteData
+```
+
+```{r}
+(siteData1 =  siteData 
+ %>% mutate(Date = mdy(tempDate)) %>% 
+   dplyr::select(!Difference) %>%
+   pivot_longer(!c(site:tempDate,julianDay, Date), names_to = "measuredModeled", values_to = "Temperature")
+ )
+```
+
+```{r}
+(siteData2 =  siteData 
+ %>% mutate(Date = mdy(tempDate))  %>%
+   rename(measured = `Measured TempC`, modeled = `Modelled TempC`))
+```
+
+# Figures
+```{r}
+( dailyPlot = ggplot(siteData1, aes(x=Date, y=Temperature, color=measuredModeled)) +
+  geom_point(size=.5, shape=1) +
+  geom_line(size=1) +
+  scale_color_manual(values=c('#f1a340','#998ec3'), name="", labels=c('Measured Temperature', 'Modeled Temperature')) +
+  facet_wrap(~site, ncol=2) +
+ comp_theme +
+     
+    theme(
+   strip.background = element_rect(
+     color="white", fill="white", size=1.5, linetype="solid"
+     )) +
+    theme(strip.text.x = element_text(size = 6)) +
+  labs(y=expression('Temperature '*degree*C))
+ )
+```
+
+```{r eval=FALSE, include=FALSE}
+ggsave("../figures/HollowayAirTempDaily.png", plot = dailyPlot, width = 6, height =6, units = c("in"), dpi=600, bg = "white" )
+```
+
+```{r}
+(rsqplot = ggplot(siteData2, aes(x=measured, y=modeled)) +
+  geom_point(size = 1, shape=1, color="#a6cee3") +
+  facet_wrap(~site, ncol=2) +
+  stat_poly_line() +
+  stat_poly_eq() +
+ comp_theme +
+     
+    theme(
+   strip.background = element_rect(
+     color="white", fill="white", size=1.5, linetype="solid"
+     )) +
+    theme(strip.text.x = element_text(size = 6)) +
+  labs(x=expression(Measured~'Temperature '*degree*C), y=expression(Modeled~'Temperature '*degree*C))
+)
+```
+
+
+```{r eval=FALSE, include=FALSE}
+ggsave("../figures/HollowayAirTempRsq.png", plot = rsqplot, width = 6, height =6, units = c("in"), dpi=600, bg = "white" )
+```
