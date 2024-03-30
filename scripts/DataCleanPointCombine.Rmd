@@ -876,6 +876,7 @@ f16$slope <- read.csv(f[16], header = TRUE, colClasses = "character")[,20]
 f16$organic_depth <- as.numeric(f16$organic_depth)
 # convert thaw depth to numeric - blank cells have a period, and will be converted to NA
 f16$thaw_depth <- as.numeric(f16$thaw_depth)
+f16$fire_year[f16$site_id == "Anaktuvuk River fire"] <- 2007
 ```
 
 ```{r}
@@ -914,7 +915,9 @@ str(f16)
     mutate(submitNm="Rocha")
 )
 ```
-
+```{r}
+f16_dates %>% filter(site_id=="ARF Severe")
+```
 ```{r}
 f16_dates %>% distinct(site_id, plot_id, fire_id, burn_unburn) 
 f16_dates %>% distinct(msrDoy, year, date)

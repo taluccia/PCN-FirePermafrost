@@ -37,81 +37,92 @@ comp_theme = theme_bw() + theme(legend.position = "bottom") +
 
 ## Predicted measurements
 ```{r}
-datacubePred = read_csv("../data/dataCube/DatacubePermafrostFirePredicted.csv")
+datacubePred = read_csv("../data/dataCube/PermafrostFireDatacubeFinal.csv")
 ```
 
 ```{r}
 datacubePred
 ```
 
-
-```{r eval=FALSE, include=FALSE}
-datacubePred %>% filter(plotId %in% c('RT1', 'RT2', 'RT3', 'RT4', '1', '4', '4b', '5', 'B1', 'B2', 'B3'))
+```{r}
+datacubePred %>% filter(tsf==0)
 ```
-
-```{r eval=FALSE, include=FALSE}
-datacubePred$fire_year[datacubePred$plotId %in% c('RT1', 'RT2', 'RT3', 'RT4', '1', '4', '4b', '5', 'B1', 'B2', 'B3')] <- 2015
+```{r}
+datacubePred1 = datacubePred %>%
+  mutate(tsf = str_replace(tsf, 'unburned', 'u')) 
 ```
-```{r eval=FALSE, include=FALSE}
-datacubePred$fireYr[datacubePred$siteId == "Anaktuvuk River fire"] <- 2007
-```
-
-# Missing fire year
+# aggregate burn and unburned pairs with summary stats
 
 ```{r}
-datacubePred %>% filter(is.na(fireYr))
+( aggregate = datacubePred %>% 
+  group_by(resName, submitNm, distur, paired, fireYr, tsf) %>%
+  summarise(n = n(),
+            mean = mean(predDepth),
+            sd   = sd(predDepth, na.rm=TRUE),
+            se   = sd / sqrt(n))
+)
 ```
-# aggregate burn and unburned pairs
-
 ```{r}
-aggregate = datacubePred %>% 
-     mutate(TimeSinceFire = year-fireYr) %>%
-  group_by(biome, resName, submitNm, distur, paired, fireYr) %>%
-  summarise(avgPredDepth = mean(predDepth),
-            meanTSF = mean(TimeSinceFire)) 
+aggregate$tsf[aggregate$distur == "unburned"] <- "u"
 
-aggregate$meanTSF[aggregate$distur == "unburned"] <- -9999
-
-( aggregate1 = aggregate %>% mutate(meanTSF = round(meanTSF,0)) %>% filter(meanTSF < 1000) )
+```
+```{r}
+unique(sort(aggregate$tsf))
 ```
 
 ```{r}
-aggregate %>% filter(meanTSF > 1000)
+aggregate$tsf = factor(aggregate$tsf, levels = c("u", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "12", "13", "14", "15", "16", "17", "18","19", "20", "21", "29", "30", "31", "32",  "33", "35", "36", "40", "41", "42", "45", "46", "47", "48", "49", "52"))
 ```
+
+
 
 ```{r}
-min(aggregate1$meanTSF)
-max(aggregate1$meanTSF)
-unique(aggregate1$meanTSF)
-```
-```{r}
-unique(aggregate1$resName)
-aggregate1 %>% filter(resName=="Yamal-Gydan tundra" )
+unique(aggregate$tsf)
 ```
 
 
-# Palettes
 
 ```{r}
-ecoPalette = c('#a6cee3','#1f78b4',"#00bfa0",'#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00',"#dc0ab4",'#b2df8a','#ffff99', '#CC6677', '#DDCC77')
+aggregate 
 ```
+
+
+
 
 # Plot
 
+## Burned Unburned
 ```{r}
-ggplot(aggregate1, aes(x = distur, y=avgPredDepth, color=as.factor(meanTSF))) +
-  geom_boxplot() +
-  labs(x="", y="Depth (cm)") +
-  facet_wrap(~resName) +
-  comp_theme 
-```
-
-```{r}
-( pairedBoxplots = ggplot(aggregate1, aes(x = distur, y=avgPredDepth, color=distur)) +
+( pairedBoxplots = ggplot(aggregate, aes(x = distur, y=mean, color=distur)) +
   geom_boxplot() +
   scale_color_manual(values=c('#fc8d59', '#91bfdb'), name="", labels = c('Burned', 'Unburned')) +
   labs(x="", y="Depth (cm)") +
-  facet_wrap(~resName) +
+  facet_wrap(~resName, scales = "free_y") +
+  comp_theme +
+     theme(axis.text.y = element_text(size=5),
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank()
+  ) +
+    theme(
+   strip.background = element_rect(
+     color="white", fill="white", size=1.5, linetype="solid"
+     )) +
+    theme(strip.text.x = element_text(size = 5))
+)
+```
+
+```{r eval=FALSE, include=FALSE}
+ggsave("../figures/AggregateBurnedUnburned.png", plot = pairedBoxplots, width = 6, height =5, units = c("in"), dpi=600, bg = "white" )
+```
+
+## Mean 
+```{r}
+( pairedBoxplots = ggplot(aggregate, aes(x = distur, y=mean, color=distur)) +
+  geom_point() +
+  scale_color_manual(values=c('#fc8d59', '#91bfdb'), name="", labels = c('Burned', 'Unburned')) +
+  labs(x="", y="Depth (cm)") +
+  facet_wrap(~resName, scales = "free_y") +
   comp_theme +
      theme(
     axis.title.x = element_blank(),
@@ -126,52 +137,51 @@ ggplot(aggregate1, aes(x = distur, y=avgPredDepth, color=as.factor(meanTSF))) +
 )
 ```
 
-```{r eval=FALSE, include=FALSE}
-ggsave("../figures/AggregateBurnedUnburned.png", plot = pairedBoxplots, width = 6, height =5, units = c("in"), dpi=600, bg = "white" )
-```
 
 
-# Means with error Bars
-```{r}
-aggregate2 = datacubePred %>% 
-     mutate(tsf = year-fireYr) %>%
-  group_by(resName, submitNm, distur, paired, fireYr, year) %>%
-  summarise(avgPredDepth = mean(predDepth),
-            tsf = mean(tsf)) 
-
-aggregate2$tsf[aggregate$distur == "unburned"] <- -9999
-aggregate2
-aggregate3 = aggregate2 %>% filter(meanTSF < 1000) 
-aggregate3
-```
-
+# Means with error Bars with tsf
 
 ```{r}
-( plotMeanError <- ggplot(aggregate2, aes(x = tsf, y=avgPredDepth, color=distur, group=tsf)) +
-    geom_point(size=3, shape=21) +
+( plotMeanTSF <- ggplot(aggregate, aes(x = tsf, y=mean, color=distur, group=tsf)) +
+    geom_point() +
       scale_color_manual(values=c('#fc8d59', '#91bfdb'), name="", labels = c('Burned', 'Unburned')) +
-  labs(x="", y="Depth (cm)") +
-  facet_wrap(~resName) +
+  labs(x="Time since fire", y="Depth (cm)") +
+  facet_wrap(~resName, scales = "free") +
   comp_theme +
     theme(
-   strip.background = element_rect(
-     color="white", fill="white", size=1.5, linetype="solid"
-     )) +
+          axis.text.y = element_text(size=5),
+          axis.text.x = element_text(size=5, angle=45),
+          strip.background = element_rect( color="white", fill="white", size=1.5, linetype="solid" )) +
     theme(strip.text.x = element_text(size = 6))
 )
 ```
 
+```{r eval=FALSE, include=FALSE}
+ggsave("../figures/AggregateBurnedUnburnedTsf.png", plot = plotMeanTSF, width = 6, height =5, units = c("in"), dpi=600, bg = "white" )
+```
 
-# Repeat measures Time since fire
-
-# Test difference in means between burn and unburned and time since fire
-
-# Model two variable
+# MEan TSF repeat measures
 
 ```{r}
-model1 = lm(avgPredDepth ~ resName:distur + as.factor(meanTSF), data = aggregate1)
+aggregate1 = aggregate %>% filter(paired %in% c("a1", "a2", "a4", "f1", "g1", "i2", "i1", "l2", "l3", "l4", "l6", "n7", "n1", "n2", "n4", "n5", "p1", "p6"))
+
 ```
 
 ```{r}
-summary(model1)
+aggregate1
+```
+
+```{r}
+( plotMeanTSFrepeat <- ggplot(aggregate1, aes(x = tsf, y=mean, color=submitNm)) +
+    geom_point() +
+      scale_color_manual(values=c('#1b9e77','#d95f02','#7570b3','#e7298a','#66a61e','#e6ab02','#a6761d'), name="") +
+  labs(x="Time since fire", y="Depth (cm)") +
+  facet_wrap(~resName, scales = "free") +
+  comp_theme +
+    theme(
+          axis.text.y = element_text(size=5),
+          axis.text.x = element_text(size=5, angle=45),
+          strip.background = element_rect( color="white", fill="white", size=1.5, linetype="solid" )) +
+    theme(strip.text.x = element_text(size = 6))
+)
 ```

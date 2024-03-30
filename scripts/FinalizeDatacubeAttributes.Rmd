@@ -41,19 +41,45 @@ datacubePred
 names(datacubePred)
 ```
 
+```{r}
+( rocha = datacubePred %>% filter(submitNm=="Rocha") )
+rocha %>% filter(siteId=="Anaktuvuk River fire")
+unique(rocha$fireYr)
+```
 
+# Final clean up
+```{r}
+datacubePred$fireYr[datacubePred$siteId == "Anaktuvuk River fire"] <- 2007
+datacubePred$distur[datacubePred$siteId == "lutose_unburn"] <- "unburned"
+```
+
+# Add Time since fire 
 
 ```{r}
 ( datacubePred1 = datacubePred %>% 
   dplyr::select(plotId:resRealm, permaCombo:permaRelict, predDoy, predDepth) %>% 
   mutate(tsf = year-fireYr)
 )
+
 ```
 
-49,997
+```{r}
+datacubePred1$tsf[datacubePred1$distur == "unburned"] <- "NA"
+
+```
+
 
 ```{r}
-write_csv(datacubePred1, '../outputs/dataCube/PermafrostFireDatacubeFinal.csv')
+unique(datacubePred1$tsf)
+```
+
+
+```{r}
+( datacubePred2 = datacubePred1 %>% filter(tsf !=("12013")) )
+```
+
+```{r}
+write_csv(datacubePred2, '../outputs/dataCube/PermafrostFireDatacubeFinal.csv')
 ```
 
 
@@ -69,6 +95,9 @@ datacubePred1 %>% group_by(submitNm, siteId, paired, fireYr, year) %>% summarize
 (repeatMeasures = datacubePred1 %>% group_by(submitNm, siteId, paired, fireYr) %>% summarize(numberYrsMeasured = n_distinct(year)) %>% filter(fireYr!=-9999) %>% filter(numberYrsMeasured>1) )
 ```
 
+```{r}
+unique(repeatMeasures$paired)
+```
 
 ```{r}
 write_csv(repeatMeasures, '../outputs/RepeatMeasuresFromDataCube.csv')
