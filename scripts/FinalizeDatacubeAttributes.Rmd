@@ -82,6 +82,41 @@ unique(datacubePred1$tsf)
 write_csv(datacubePred2, '../outputs/dataCube/PermafrostFireDatacubeFinal.csv')
 ```
 
+# Summary information
+
+```{r}
+unique(sort(datacubePred2$fireYr))
+```
+```{r}
+unique(sort(datacubePred2$siteId))
+```
+
+```{r}
+unique(sort(datacubePred2$resName))
+```
+```{r}
+unique(sort(datacubePred2$submitNm))
+```
+
+```{r}
+unique(sort(datacubePred2$cntryId))
+```
+
+```{r}
+unique(sort(datacubePred2$resBiomeNm))
+```
+```{r}
+datacubePred2 %>% group_by(cntryId) %>% summarise(n=n())
+```
+
+```{r}
+datacubePred2 %>% group_by(permaExtent) %>% summarise(n=n())
+```
+```{r}
+datacubePred2 %>% group_by(resBiomeNm) %>% summarise(n=n())
+```
+
+# Repeat measures
 
 ```{r}
 names(datacubePred1)

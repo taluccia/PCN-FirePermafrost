@@ -43,7 +43,20 @@ datacubePred = read_csv("../data/dataCube/PermafrostFireDatacubeFinal.csv")
 ```{r}
 datacubePred
 ```
+# Summary information
 
+```{r}
+unique(sort(datacubePred$fireYr))
+```
+```{r}
+unique(sort(datacubePred$siteId))
+```
+
+```{r}
+unique(sort(datacubePred$resName))
+```
+
+# Look at specific data
 ```{r}
 datacubePred %>% filter(tsf==0)
 ```
@@ -55,6 +68,7 @@ datacubePred1 = datacubePred %>%
 
 ```{r}
 ( aggregate = datacubePred %>% 
+    drop_na(paired) %>%
   group_by(resName, submitNm, distur, paired, fireYr, tsf) %>%
   summarise(n = n(),
             mean = mean(predDepth),
@@ -86,7 +100,16 @@ unique(aggregate$tsf)
 aggregate 
 ```
 
-
+```{r}
+( aggregatePaired = datacubePred %>% 
+    drop_na(paired) %>%
+  group_by(resName, submitNm, distur, paired, fireYr) %>%
+  summarise(n = n(),
+            mean = mean(predDepth),
+            sd   = sd(predDepth, na.rm=TRUE),
+            se   = sd / sqrt(n))
+)
+```
 
 
 # Plot
@@ -116,28 +139,28 @@ aggregate
 ggsave("../figures/AggregateBurnedUnburned.png", plot = pairedBoxplots, width = 6, height =5, units = c("in"), dpi=600, bg = "white" )
 ```
 
-## Mean 
+## Mean with Error bars by pairs By submit name
 ```{r}
-( pairedBoxplots = ggplot(aggregate, aes(x = distur, y=mean, color=distur)) +
-  geom_point() +
+pd <- position_dodge(0.5) # move them .05 to the left and right
+
+( plotPairs = ggplot(aggregatePaired, aes(x = paired, y=mean, color=distur)) +
+  #geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=.1, size=.3, position=pd) +
+  geom_point(position=pd, size=1) +
   scale_color_manual(values=c('#fc8d59', '#91bfdb'), name="", labels = c('Burned', 'Unburned')) +
-  labs(x="", y="Depth (cm)") +
-  facet_wrap(~resName, scales = "free_y") +
+  labs(x="", y="Depth (cm)", ) +
+ facet_wrap(~submitNm, scales = "free", ncol=4) +
   comp_theme +
-     theme(
-    axis.title.x = element_blank(),
-    axis.text.x = element_blank(),
-    axis.ticks.x = element_blank()
-  ) +
-    theme(
-   strip.background = element_rect(
-     color="white", fill="white", size=1.5, linetype="solid"
-     )) +
-    theme(strip.text.x = element_text(size = 6))
+    theme(axis.text.y = element_text(size=5),
+          axis.text.x = element_text(size=5, angle=45),
+   strip.background = element_rect(color="white", fill="white", size=1.5, linetype="solid"),
+  strip.text.x = element_text(size = 8)) 
 )
+
 ```
-
-
+width = 6, height =5, units = c("in"),
+```{r eval=FALSE, include=FALSE}
+ggsave("../figures/AggregateBurnedUnburnedPairs.png", plot = plotPairs,  dpi=600, bg = "white" )
+```
 
 # Means with error Bars with tsf
 
@@ -184,4 +207,92 @@ aggregate1
           strip.background = element_rect( color="white", fill="white", size=1.5, linetype="solid" )) +
     theme(strip.text.x = element_text(size = 6))
 )
+```
+
+
+## Mean with Error bars by pairs By submit name
+
+```{r}
+unique(aggregate$submitNm)
+```
+
+```{r}
+pd <- position_dodge(0.5) # move them .05 to the left and right
+```
+
+```{r}
+aggregate %>% filter(submitNm == "Baillargeon") %>%
+  ggplot(., aes(x = paired, y=mean, color=distur)) +
+  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=.3, position=pd) +
+  geom_point(position=pd, size=2) +
+  scale_color_manual(values=c('#fc8d59', '#91bfdb'), name="", labels = c('Burned', 'Unburned')) +
+  labs(x="Pairs", y="Depth (cm)", title="Baillargeon") +
+  comp_theme +
+    theme(
+   strip.background = element_rect(
+     color="white", fill="white", size=1.5, linetype="solid"
+     )) +
+    theme(strip.text.x = element_text(size = 6)) 
+ 
+
+```
+
+```{r}
+aggregate %>% filter(submitNm == "Gaglioti" ) %>%
+  ggplot(., aes(x = paired, y=mean, color=distur)) +
+  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=.3, position=pd) +
+  geom_point(position=pd, size=2) +
+  scale_color_manual(values=c('#fc8d59', '#91bfdb'), name="", labels = c('Burned', 'Unburned')) +
+  labs(x="Pairs", y="Depth (cm)", title="Gaglioti") +
+  comp_theme +
+    theme(
+   strip.background = element_rect(
+     color="white", fill="white", size=1.5, linetype="solid"
+     )) +
+    theme(strip.text.x = element_text(size = 6)) 
+```
+
+```{r}
+aggregate %>% filter(submitNm == "Natali" ) %>%
+  ggplot(., aes(x = paired, y=mean, color=distur)) +
+  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=.3, position=pd) +
+  geom_point(position=pd, size=2) +
+  scale_color_manual(values=c('#fc8d59', '#91bfdb'), name="", labels = c('Burned', 'Unburned')) +
+  labs(x="Pairs", y="Depth (cm)", title="Natali") +
+  comp_theme +
+    theme(
+   strip.background = element_rect(
+     color="white", fill="white", size=1.5, linetype="solid"
+     )) +
+    theme(strip.text.x = element_text(size = 6)) 
+```
+
+```{r}
+aggregate %>% filter(submitNm == "Rocha" ) %>%
+  ggplot(., aes(x = paired, y=mean, color=distur)) +
+  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=.3, position=pd) +
+  geom_point(position=pd, size=2) +
+  scale_color_manual(values=c('#fc8d59', '#91bfdb'), name="", labels = c('Burned', 'Unburned')) +
+  labs(x="Pairs", y="Depth (cm)", title="Rocha") +
+  comp_theme +
+    theme(
+   strip.background = element_rect(
+     color="white", fill="white", size=1.5, linetype="solid"
+     )) +
+    theme(strip.text.x = element_text(size = 6)) 
+```
+
+```{r}
+aggregate %>% filter(submitNm == "Rocha" ) %>%
+  ggplot(., aes(x = paired, y=mean, color=distur)) +
+  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=.3, position=pd) +
+  geom_point(position=pd, size=2) +
+  scale_color_manual(values=c('#fc8d59', '#91bfdb'), name="", labels = c('Burned', 'Unburned')) +
+  labs(x="Pairs", y="Depth (cm)", title="Rocha") +
+  comp_theme +
+    theme(
+   strip.background = element_rect(
+     color="white", fill="white", size=1.5, linetype="solid"
+     )) +
+    theme(strip.text.x = element_text(size = 6)) 
 ```

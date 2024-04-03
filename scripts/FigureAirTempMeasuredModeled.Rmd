@@ -63,7 +63,7 @@ siteData
 ```{r}
 ( dailyPlot = ggplot(siteData1, aes(x=Date, y=Temperature, color=measuredModeled)) +
   geom_point(size=.5, shape=1) +
-  geom_line(size=1) +
+  geom_line(size=.3) +
   scale_color_manual(values=c('#f1a340','#998ec3'), name="", labels=c('Measured Temperature', 'Modeled Temperature')) +
   facet_wrap(~site, ncol=2) +
  comp_theme +
