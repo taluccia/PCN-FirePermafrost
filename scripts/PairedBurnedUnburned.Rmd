@@ -64,6 +64,7 @@ datacubePred %>% filter(tsf==0)
 datacubePred1 = datacubePred %>%
   mutate(tsf = str_replace(tsf, 'unburned', 'u')) 
 ```
+
 # aggregate burn and unburned pairs with summary stats
 
 ```{r}
@@ -184,24 +185,55 @@ ggsave("../figures/AggregateBurnedUnburnedTsf.png", plot = plotMeanTSF, width = 
 ```
 
 # MEan TSF repeat measures
-
 ```{r}
-aggregate1 = aggregate %>% filter(paired %in% c("a1", "a2", "a4", "f1", "g1", "i2", "i1", "l2", "l3", "l4", "l6", "n7", "n1", "n2", "n4", "n5", "p1", "p6"))
-
+( aggregateUnburned = datacubePred %>% 
+    drop_na(paired) %>%
+    filter(distur =="unburned") %>%
+  group_by(resName, submitNm, distur, paired, fireYr, tsf) %>%
+  summarise(n = n(),
+            mean = mean(predDepth),
+            sd   = sd(predDepth, na.rm=TRUE),
+            se   = sd / sqrt(n))  %>%
+    dplyr::select(resName:fireYr, mean, se) %>%
+  rename(fireYrUnburned = fireYr, mean_unburned = mean, se_unburned = se, disturUnburn = distur)
+)
 ```
 
 ```{r}
-aggregate1
+( aggregateBurned = datacubePred %>% 
+    drop_na(paired) %>%
+    filter(distur =="burned") %>%
+  group_by(resName, submitNm, distur, paired, fireYr, tsf) %>%
+  summarise(n = n(),
+            mean = mean(predDepth),
+            sd   = sd(predDepth, na.rm=TRUE),
+            se   = sd / sqrt(n))  %>%
+    dplyr::select(resName:fireYr, tsf, mean, se) %>%
+  rename(fireYrBurned = fireYr, mean_burned = mean, se_burned = se, disturBurn = distur) 
+)
 ```
 
 ```{r}
-( plotMeanTSFrepeat <- ggplot(aggregate1, aes(x = tsf, y=mean, color=submitNm)) +
-    geom_point() +
-      scale_color_manual(values=c('#1b9e77','#d95f02','#7570b3','#e7298a','#66a61e','#e6ab02','#a6761d'), name="") +
-  labs(x="Time since fire", y="Depth (cm)") +
+( depthChange = aggregateBurned %>% 
+    left_join(aggregateUnburned, by=c("paired", "submitNm", "resName")) %>%
+  drop_na(disturUnburn) %>%
+  mutate(depthChange = mean_burned-mean_unburned)
+)
+```
+
+
+
+```{r}
+( plotDepthChange = ggplot(depthChange, aes(x = tsf, y=depthChange)) +
+  geom_hline(yintercept=0, color="gray", size = 3, alpha = .5) + 
+   geom_point(color='#5e4fa2', size = 3, shape = 21) +
+
+      #scale_color_manual(values=c('#1b9e77','#d95f02','#7570b3','#e7298a','#66a61e','#e6ab02','#a6761d'), name="") +
+  
+  labs(x="Time since fire", y="Change in depth (cm)") +
   facet_wrap(~resName, scales = "free") +
   comp_theme +
-    theme(
+    theme(legend.position = "none",
           axis.text.y = element_text(size=5),
           axis.text.x = element_text(size=5, angle=45),
           strip.background = element_rect( color="white", fill="white", size=1.5, linetype="solid" )) +
@@ -209,90 +241,26 @@ aggregate1
 )
 ```
 
-
-## Mean with Error bars by pairs By submit name
-
-```{r}
-unique(aggregate$submitNm)
+```{r eval=FALSE, include=FALSE}
+ggsave("../figures/AggregateDepthChangeTsf.png", plot = plotDepthChange,  dpi=600, bg = "white" )
 ```
 
-```{r}
-pd <- position_dodge(0.5) # move them .05 to the left and right
-```
 
+# By biome
 ```{r}
-aggregate %>% filter(submitNm == "Baillargeon") %>%
-  ggplot(., aes(x = paired, y=mean, color=distur)) +
-  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=.3, position=pd) +
-  geom_point(position=pd, size=2) +
-  scale_color_manual(values=c('#fc8d59', '#91bfdb'), name="", labels = c('Burned', 'Unburned')) +
-  labs(x="Pairs", y="Depth (cm)", title="Baillargeon") +
+( plotDepthChange = ggplot(depthChange, aes(x = tsf, y=depthChange)) +
+  geom_hline(yintercept=0, color="gray", size = 3, alpha = .5) + 
+   geom_point(color='#5e4fa2', size = 3, shape = 21) +
+
+      #scale_color_manual(values=c('#1b9e77','#d95f02','#7570b3','#e7298a','#66a61e','#e6ab02','#a6761d'), name="") +
+  
+  labs(x="Time since fire", y="Change in depth (cm)") +
+  facet_wrap(~resBiome, scales = "free") +
   comp_theme +
-    theme(
-   strip.background = element_rect(
-     color="white", fill="white", size=1.5, linetype="solid"
-     )) +
-    theme(strip.text.x = element_text(size = 6)) 
- 
-
-```
-
-```{r}
-aggregate %>% filter(submitNm == "Gaglioti" ) %>%
-  ggplot(., aes(x = paired, y=mean, color=distur)) +
-  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=.3, position=pd) +
-  geom_point(position=pd, size=2) +
-  scale_color_manual(values=c('#fc8d59', '#91bfdb'), name="", labels = c('Burned', 'Unburned')) +
-  labs(x="Pairs", y="Depth (cm)", title="Gaglioti") +
-  comp_theme +
-    theme(
-   strip.background = element_rect(
-     color="white", fill="white", size=1.5, linetype="solid"
-     )) +
-    theme(strip.text.x = element_text(size = 6)) 
-```
-
-```{r}
-aggregate %>% filter(submitNm == "Natali" ) %>%
-  ggplot(., aes(x = paired, y=mean, color=distur)) +
-  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=.3, position=pd) +
-  geom_point(position=pd, size=2) +
-  scale_color_manual(values=c('#fc8d59', '#91bfdb'), name="", labels = c('Burned', 'Unburned')) +
-  labs(x="Pairs", y="Depth (cm)", title="Natali") +
-  comp_theme +
-    theme(
-   strip.background = element_rect(
-     color="white", fill="white", size=1.5, linetype="solid"
-     )) +
-    theme(strip.text.x = element_text(size = 6)) 
-```
-
-```{r}
-aggregate %>% filter(submitNm == "Rocha" ) %>%
-  ggplot(., aes(x = paired, y=mean, color=distur)) +
-  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=.3, position=pd) +
-  geom_point(position=pd, size=2) +
-  scale_color_manual(values=c('#fc8d59', '#91bfdb'), name="", labels = c('Burned', 'Unburned')) +
-  labs(x="Pairs", y="Depth (cm)", title="Rocha") +
-  comp_theme +
-    theme(
-   strip.background = element_rect(
-     color="white", fill="white", size=1.5, linetype="solid"
-     )) +
-    theme(strip.text.x = element_text(size = 6)) 
-```
-
-```{r}
-aggregate %>% filter(submitNm == "Rocha" ) %>%
-  ggplot(., aes(x = paired, y=mean, color=distur)) +
-  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=.3, position=pd) +
-  geom_point(position=pd, size=2) +
-  scale_color_manual(values=c('#fc8d59', '#91bfdb'), name="", labels = c('Burned', 'Unburned')) +
-  labs(x="Pairs", y="Depth (cm)", title="Rocha") +
-  comp_theme +
-    theme(
-   strip.background = element_rect(
-     color="white", fill="white", size=1.5, linetype="solid"
-     )) +
-    theme(strip.text.x = element_text(size = 6)) 
+    theme(legend.position = "none",
+          axis.text.y = element_text(size=5),
+          axis.text.x = element_text(size=5, angle=45),
+          strip.background = element_rect( color="white", fill="white", size=1.5, linetype="solid" )) +
+    theme(strip.text.x = element_text(size = 6))
+)
 ```

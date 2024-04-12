@@ -78,6 +78,11 @@ unique(datacubePred1$tsf)
 ( datacubePred2 = datacubePred1 %>% filter(tsf !=("12013")) )
 ```
 
+## Drop
+Drop the following data, rock hits, gt probe, and any unpaired sites
+
+
+## Save
 ```{r}
 write_csv(datacubePred2, '../outputs/dataCube/PermafrostFireDatacubeFinal.csv')
 ```
