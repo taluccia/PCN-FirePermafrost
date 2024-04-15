@@ -42,18 +42,24 @@ names(datacubePred)
 ```
 
 ```{r}
+unique(datacubePred$submitNm)
+```
+
+```{r}
 ( rocha = datacubePred %>% filter(submitNm=="Rocha") )
 rocha %>% filter(siteId=="Anaktuvuk River fire")
 unique(rocha$fireYr)
 ```
 
 # Final clean up
+
+## Fix fire year and unburned for specific site
 ```{r}
 datacubePred$fireYr[datacubePred$siteId == "Anaktuvuk River fire"] <- 2007
 datacubePred$distur[datacubePred$siteId == "lutose_unburn"] <- "unburned"
 ```
 
-# Add Time since fire 
+## Add Time since fire 
 
 ```{r}
 ( datacubePred1 = datacubePred %>% 
@@ -63,6 +69,7 @@ datacubePred$distur[datacubePred$siteId == "lutose_unburn"] <- "unburned"
 
 ```
 
+## Update TSF for unburned
 ```{r}
 datacubePred1$tsf[datacubePred1$distur == "unburned"] <- "NA"
 
@@ -73,82 +80,77 @@ datacubePred1$tsf[datacubePred1$distur == "unburned"] <- "NA"
 unique(datacubePred1$tsf)
 ```
 
-
+## Remove incorrect TSF due to missing fire year
 ```{r}
-( datacubePred2 = datacubePred1 %>% filter(tsf !=("12013")) )
-```
-
-## Drop
-Drop the following data, rock hits, gt probe, and any unpaired sites
-
-
-## Save
-```{r}
-write_csv(datacubePred2, '../outputs/dataCube/PermafrostFireDatacubeFinal.csv')
-```
-
-# Summary information
-
-```{r}
-unique(sort(datacubePred2$fireYr))
-```
-```{r}
-unique(sort(datacubePred2$siteId))
+datacubePred1 %>% 
+    filter(tsf ==("12013"))
 ```
 
 ```{r}
-unique(sort(datacubePred2$resName))
+( datacubePred2 = datacubePred1 %>% 
+    filter(tsf !=("12013"))
+  )
 ```
+
+
+    
+## Drop hit rock, greater than probe, and missing paired unburned
+
+### Check each filter
 ```{r}
-unique(sort(datacubePred2$submitNm))
+datacubePred2 %>% filter(hitRock == "n" )
+datacubePred2 %>% filter(gtProbe == "n" ) 
+datacubePred2 %>% filter(if_any(paired, is.na))
+```
+
+### Dieleman_Baltzer_Turetsky Pair Issue
+ifelse(member_casual %in% c("member", "Subscriber"), "member", "casual"))
+```{r}
+( dieleman = datacubePred2 %>% filter(lastNm == "Dieleman_Baltzer_Turetsky" ) %>%
+  mutate(paired = ifelse(siteId %in% c("CG1-15", "CG1-157", "CG1-18", "CG1-25", "CG1-6", "CG1-8", "F1-12", "F1-22", "F1-25", 'F1-31', 'F1-47'), 'e1',
+                  ifelse(siteId %in% c('C1-14', 'C1-17', 'C1-19', 'C1-32', 'C1-8', 'F11-1', 'F11-10', 'F11-15', 'F11-19'), 'e2',
+                  ifelse(siteId %in% c('F13-11', 'F13-5', 'C5-4'), 'e3',
+                  ifelse(siteId %in% c('C7-18', 'C7-5', 'C7-9', 'C8-4', 'C9-1', 'C9-5', 'C9-9', 'F15-13', 'F15-16', 'F15-9', 'F17-5'), 'e4',
+                  ifelse(siteId %in% c('CG3-12', 'CG3-30', 'CG3-31', 'CG3-4', 'CG3-40', 'F3-19', 'F3-3','F3-8'), 'e5',
+                  ifelse(siteId %in% c('CG2-20', 'CG2-5', 'F4-1', 'F4-31', 'ZF46-1',  'ZF46-15', 'ZF46-18', 'ZF46-21'), 'e6',
+                   ifelse(siteId %in% c('KAK-UB-1', 'SS33-1','SS33-11','SS33-21','SS33-21','SS33-25','SS33-26','SS33-27','SS33-27','SS33-27','SS33-3','SS33-582','SS33-6','SS33-6',
+'SS33-877','SS33-877','SS33-9'), 'e7',      
+                   ifelse(siteId %in% c('ZF20-10', 'ZF20-11', 'ZF20-12', 'ZF20-125', 'ZF20-4', 'ZF20-40', 'ZF20-43', 'ZF20-6', 'ZF20-8', 'ZF20-9', 'ZF20-9', 'HWY3-UB-1'), 'e8',
+                ifelse(siteId %in% c('ZF26-104', 'ZF26-112', 'ZF26-113', 'ZF26-118', 'ZF26-5', 'ZF26-50', 'ZF26-6', 'ZF26-66', 'ZF26-7', 'ZF26-96', 'ZF26-98', 'WEK-UB-1'), 'e9', NA))))))))))
+)
+
 ```
 
 ```{r}
-unique(sort(datacubePred2$cntryId))
+unique(dieleman$siteId)
 ```
 
 ```{r}
-unique(sort(datacubePred2$resBiomeNm))
+unique(dieleman$paired)
+( pairedNA = dieleman %>% filter(if_any(paired, is.na)) )
+dieleman %>% filter(siteId %in% c("C3-3", "C5-11","C1-21","F7-1" ))
+unique(pairedNA$siteId)
 ```
+"F2-137" "F2-18" "F2-4"   "F6-1"no pair
+Dielman loos 44 measurement s due to missing pairs
+### Final Filters
 ```{r}
-datacubePred2 %>% group_by(cntryId) %>% summarise(n=n())
-```
-
-```{r}
-datacubePred2 %>% group_by(permaExtent) %>% summarise(n=n())
-```
-```{r}
-datacubePred2 %>% group_by(resBiomeNm) %>% summarise(n=n())
-```
-
-# Repeat measures
-
-```{r}
-names(datacubePred1)
+( datacubePred3 = datacubePred2 %>% 
+    filter(hitRock == "n" ) %>%
+    filter(gtProbe == "n" ) %>%
+    drop_na(paired)
+    
+  )
 ```
 
 ```{r}
-datacubePred1 %>% group_by(submitNm, siteId, paired, fireYr, year) %>% summarize(n = n())
+unique(datacubePred3$lastNm)
+unique(datacubePred3$slope)
 ```
 
+## Save FInal data cube
 ```{r}
-(repeatMeasures = datacubePred1 %>% group_by(submitNm, siteId, paired, fireYr) %>% summarize(numberYrsMeasured = n_distinct(year)) %>% filter(fireYr!=-9999) %>% filter(numberYrsMeasured>1) )
-```
-
-```{r}
-unique(repeatMeasures$paired)
-```
-
-```{r}
-write_csv(repeatMeasures, '../outputs/RepeatMeasuresFromDataCube.csv')
-```
-
-```{r}
-datacubePred1 %>% group_by(submitNm, fireYr, year) %>% summarize(n = n())
-```
-
-```{r}
-datacubePred1 %>% filter(submitNm=="Buma") %>% filter(siteId %in% c('STEESE_1','STEESE_2', 'STEESE_3'))
+write_csv(datacubePred3, '../outputs/dataCube/PermafrostFireDatacubeFinal.csv')
 ```
 
 
