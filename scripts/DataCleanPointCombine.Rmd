@@ -39,7 +39,7 @@ wgs_proj =  "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs "
 ## vector of data files
 original data in "../data/GoogleDriveCsvFolder/"
 ```{r}
-f <- list.files(path = "../data/GoogleDriveCsv20240212/",
+f <- list.files(path = "../data/GoogleDriveCsv20240229/",
                 pattern = "*.csv", full.names = TRUE)
 ```
 
@@ -277,7 +277,7 @@ f5
 
 Fix incorrect logical columns
 ```{r}
-f5[,c(11,18,20,21)] <- read.csv(f[5], header = TRUE, colClasses = "character")[,c(11,18,20,21)]
+f5[,c(12,14,15)] <- read.csv(f[5], header = TRUE, colClasses = "character")[,c(12,14,15)]
 ```
 
 ```{r}
@@ -315,17 +315,17 @@ f5 %>% filter(is.na(thaw_depth))
   f5_dates = f5 %>%
   mutate(date = as.Date(with(., paste(year, month, day,sep="-")), "%Y-%m-%d")) %>%
   mutate(msrDoy = yday(date)) %>%
-  mutate(paired = ifelse(plot_id %in% c('CG1-15', 'CG1-157', 'CG1-18', 'CG1-25', 'CG1-6', 'CG1-8', 'F1-12', 'F1-22', 'F1-25', 'F1-31', 'F1-47'), "e1",
-                  ifelse(plot_id %in% c('C1-14', 'C1-17', 'C1-19', 'C1-32', 'C1-8', 'F11-1', 'F11-10', 'F11-15', 'F11-19'), "e2",
-                  ifelse(plot_id %in% c('F13-11', 'F13-5', 'C5-4'), "e3",
-                  ifelse(plot_id %in% c('C7-18', 'C7-5', 'C7-9', 'C8-4', 'C9-1', 'C9-5', 'C9-9', 'F15-13', 'F15-16', 'F15-9', 'F17-5'), "e4",
-                  ifelse(plot_id %in% c('CG3-12', 'CG3-30', 'CG3-31', 'CG3-4', 'CG3-40', 'F3-19', 'F3-3','F3-8'), "e5",
-                  ifelse(plot_id %in% c('CG2-20', 'CG2-5', 'F4-1', 'F4-31', 'ZF46-1', 'ZF46-15', 'ZF46-15', 'ZF46-18', 'ZF46-21'), "e6",
-                  ifelse(plot_id %in% c('SS33-1', 'SS33-11', 'SS33-21', 'SS33-25', 'SS33-26', 'SS33-27', 'SS33-3', 'SS33-582', 'SS33-6', 'SS33-877', 'SS33-9', 'KAK-UB-1'), "e7", 
-                  ifelse(plot_id %in% c('ZF20-10', 'ZF20-11', 'ZF20-12', 'ZF20-125', 'ZF20-4', 'ZF20-40', 'ZF20-43', 'ZF20-6', 'ZF20-8', 'ZF20-9', 'ZF20-9', 'HWY3-UB-1'), "e8",
-                ifelse(plot_id %in% c('ZF26-104', 'ZF26-112', 'ZF26-113', 'ZF26-118', 'ZF26-5', 'ZF26-50', 'ZF26-6', 'ZF26-66', 'ZF26-7', 'ZF26-96', 'ZF26-98', 'WEK-UB-1'), "e9", "NA")))))))))) %>%
-    mutate(submitNm="Dieleman") %>%
-    filter(lat < 89)  # Remove Dielman lat 90
+  mutate(paired = ifelse(site_id %in% c("CG1-15", "CG1-157", "CG1-18", "CG1-25", "CG1-6", "CG1-8", "F1-12", "F1-22", "F1-25", 'F1-31', 'F1-47'), 'e1',
+                  ifelse(site_id %in% c('C1-14', 'C1-17', 'C1-19', 'C1-32', 'C1-8', 'F11-1', 'F11-10', 'F11-15', 'F11-19'), 'e2',
+                  ifelse(site_id %in% c('F13-11', 'F13-5', 'C5-4'), 'e3',
+                  ifelse(site_id %in% c('C7-18', 'C7-5', 'C7-9', 'C8-4', 'C9-1', 'C9-5', 'C9-9', 'F15-13', 'F15-16', 'F15-9', 'F17-5'), 'e4',
+                  ifelse(site_id %in% c('CG3-12', 'CG3-30', 'CG3-31', 'CG3-4', 'CG3-40', 'F3-19', 'F3-3','F3-8'), 'e5',
+                  ifelse(site_id %in% c('CG2-20', 'CG2-5', 'F4-1', 'F4-31', 'ZF46-1',  'ZF46-15', 'ZF46-18', 'ZF46-21'), 'e6',
+                   ifelse(site_id %in% c('KAK-UB-1', 'SS33-1','SS33-11','SS33-21','SS33-21','SS33-25','SS33-26','SS33-27','SS33-27','SS33-27','SS33-3','SS33-582','SS33-6','SS33-6',
+'SS33-877','SS33-877','SS33-9'), 'e7',      
+                   ifelse(site_id %in% c('ZF20-10', 'ZF20-11', 'ZF20-12', 'ZF20-125', 'ZF20-4', 'ZF20-40', 'ZF20-43', 'ZF20-6', 'ZF20-8', 'ZF20-9', 'ZF20-9', 'HWY3-UB-1'), 'e8',
+                ifelse(site_id %in% c('ZF26-104', 'ZF26-112', 'ZF26-113', 'ZF26-118', 'ZF26-5', 'ZF26-50', 'ZF26-6', 'ZF26-66', 'ZF26-7', 'ZF26-96', 'ZF26-98', 'WEK-UB-1'), 'e9', NA)))))))))) %>%
+    mutate(submitNm="Dieleman") 
 )
 ```
 
@@ -1080,22 +1080,48 @@ dataCube = dplyr::bind_rows(f1_clean, f2_clean, f3_clean, f4_clean, f5_clean, f6
 ```{r}
 dataCube
 ```
-
+Contributed data 53,468 rows
 ```{r}
 colnames(dataCube)
 ```
-
+## Check Missing Day of month
 ```{r}
 ( nadoy = dataCube %>% filter(is.na(msrDoy)) )
 ```
 
 ```{r}
 unique(nadoy$submitNm)
+
+dataCube %>% filter(submitNm =="Dieleman")
+```
+## Check and fix factors
+```{r}
+unique(dataCube$hitRock)
+unique(dataCube$gtProbe)
+```
+
+```{r}
+dataCube$hitRock[dataCube$hitRock==""]<-"n"
+dataCube$gtProbe[dataCube$gtProbe==""]<-"n"
+dataCube$gtProbe[is.na(dataCube$gtProbe)]<-"n"
+```
+
+df[is.na(df)] 
+```{r}
+unique(dataCube$hitRock)
+unique(dataCube$gtProbe)
+```
+
+```{r}
+#dataCube %>% filter(if_any(paired, is.na))
+#dataCube %>% filter(if_any(hitRock, is.na))
+dataCube %>% filter(hitRock == "y" ) 
+dataCube %>% filter(gtProbe == "y" ) 
 ```
 
 ## Save Datacube as csv
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 write_csv(dataCube, '../outputs/dataCube/PermafrostFireDataCube.csv')
 ```
 
@@ -1111,19 +1137,18 @@ df_to_sf <- function(x){
 ## Drop Lat Lon NA and convert to shapefile 
 ```{r}
 ( dataCubePts = dataCube %>% 
-    drop_na(lat, lon) %>% 
-    #filter(lat < 89) %>% # Remove Dielman lat 90
-    filter(!is.na(msrDoy)) %>% # Remove sites missing Doy
+    drop_na(lat, lon, paired) %>% 
+    filter(!is.na(msrDoy)) %>% 
+    filter(hitRock == "n" ) %>% 
+    filter(gtProbe == "n" ) %>%
     df_to_sf() )
 ```
 
+
+
+With missing day removed 51,565 rows
 ```{r}
 glimpse(dataCubePts)
-```
-
-
-```{r}
-dataCubePts %>% filter(is.na(msrDoy)) 
 ```
 
 
