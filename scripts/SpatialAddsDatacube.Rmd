@@ -93,9 +93,7 @@ permafrost_wgs = st_transform(permafrost, crs= st_crs(datacubePts))
 permafrost_wgs
 ```
 
-```{r}
-plot(permafrost_wgs)
-```
+
 
 ```{r}
 unique(permafrost_wgs$NUM_CODE)
@@ -197,15 +195,27 @@ permResWwfPt_Wgs = st_transform(permResWwfPtRename, crs=4326)
 permResWwfPt_Wgs
 ```
 
+```{r}
+unique(permResWwfPt_Wgs$submitNm)
+```
+
 ## write to shapefile
 ```{r eval=FALSE, include=FALSE}
 st_write(permResWwfPt_Wgs, "../outputs/spatialDataCreate/PermafrostFireEcozoneDatacube.shp", driver="ESRI Shapefile")
 ```
 
+```{r}
+( dieleman  = permResWwfPt_Wgs %>% filter(submitNm=="Dieleman") )
+unique(dieleman$year)
+```
 
 
 ```{r eval=FALSE, include=FALSE}
 st_write(diaz, "../outputs/spatialDataCreate/diaz.shp", driver="ESRI Shapefile")
+```
+
+```{r eval=FALSE, include=FALSE}
+st_write(dieleman, "../outputs/spatialDataCreate/dieleman.shp", driver="ESRI Shapefile")
 ```
 
 ```{r eval=FALSE, include=FALSE}
@@ -218,245 +228,6 @@ unique(resWwfPt$wwfName)
 
 ```{r}
 cat(paste0(sprintf('"%s"', sort(unique(resWwfPt$wwfName))), collapse = ", "))
-```
-
-# WWF Ecozones for Map
-
-## Summaries sites by 
-
-```{r}
-(
-  wwfPtCt <- resWwfPt %>% st_drop_geometry() %>%
-                group_by(wwfName) %>%
-                summarise(count = n()) 
-  )
-```
-```{r}
-( wwfPtSum <- resWwfPt %>%
-                group_by(wwfName) %>%
-                summarise(st_union(geometry)) %>%
-                st_centroid() %>%
-  left_join(., wwfPtCt, by= 'wwfName') %>%
-  mutate(total = sum(count)) %>%
-  mutate(prop = round(count/total, 5)) %>%
-  mutate(percent = round(prop*100, 2)) %>%
-  dplyr::mutate(lon = sf::st_coordinates(.)[,1],
-                lat = sf::st_coordinates(.)[,2]) %>%
-  st_drop_geometry() %>%
-    drop_na(wwfName) %>%
-  mutate(prct = ifelse(percent == 0.38, 0.4,
-                ifelse(percent == 43.24, 43.2,
-                ifelse(percent == 7.01, 7.0,
-                ifelse(percent == 0.08, 0.1,
-                ifelse(percent == 0.96, 1.0,
-                ifelse(percent == 0.34, 0.3,
-                ifelse(percent == 17.45, 17.5,
-                ifelse(percent == 1.68, 1.7,
-                ifelse(percent == 22.3, 22.3,
-                ifelse(percent == 1.33, 1.3,
-                ifelse(percent == 2.15, 2.2,
-                ifelse(percent == 3.06, 3.1,
-                ifelse(percent == 0.01, 0.01, -99))))))))))))))
-  )
-
-```
-
-```{r}
-write_csv(wwfPtSum, '../outputs/wwfCentroidSummary.csv')
-```
-
-## Centroid by each region
-Fore the overview map
-### 1. "Arctic coastal tundra"
-```{r}
-( wwf01 =  tunBorWwf %>% 
-    filter(wwfName=='Arctic coastal tundra') %>%
-    st_geometry() %>% # pull just geometry
-  st_combine() %>%  # from many points to a single multipoint
-  st_centroid() %>% # compute centroid of the multipoint
-  st_as_sf() %>% # make it a sf object again 
-  mutate(wwfName='Arctic coastal tundra')
-)
-```
-
-### 2. "Arctic foothills tundra"
-```{r}
-wwf02 =  tunBorWwf %>% 
-    filter(wwfName=='Arctic foothills tundra') %>%
-    st_geometry() %>% # pull just geometry
-  st_combine() %>%  # from many points to a single multipoint
-  st_centroid() %>% # compute centroid of the multipoint
-  st_as_sf() %>% # make it a sf object again 
-  mutate(wwfName='Arctic foothills tundra')
-```
-
-### 3. "Beringia lowland tundra"
-```{r}
-wwf03 =  tunBorWwf %>% 
-    filter(wwfName=='Beringia lowland tundra') %>%
-    st_geometry() %>% # pull just geometry
-  st_combine() %>%  # from many points to a single multipoint
-  st_centroid() %>% # compute centroid of the multipoint
-  st_as_sf() %>% # make it a sf object again 
-  mutate(wwfName='Beringia lowland tundra')
-```
-
-
-3              Beringia lowland tundra POINT (-160.8539 60.86536)
-4               Beringia upland tundra POINT (-161.7837 62.63477)
-
-### 4. "Beringia upland tundra" 
-```{r}
-( wwf04 =  tunBorWwf %>% 
-    filter(wwfName=='Beringia upland tundra') %>%
-    st_geometry() %>% # pull just geometry
-  st_combine() %>%  # from many points to a single multipoint
-  st_centroid() %>% # compute centroid of the multipoint
-  st_as_sf() %>% # make it a sf object again 
-  mutate(wwfName='Beringia upland tundra') )
-```
-Longitude: -165.43798
-Latitude: 64.52649
-### 5. Chukchi Peninsula tundra 
-```{r}
-wwf05 =  tunBorWwf %>% 
-    filter(wwfName=="Chukchi Peninsula tundra") %>%
-    st_geometry() %>% # pull just geometry
-  st_combine() %>%  # from many points to a single multipoint
-  st_centroid() %>% # compute centroid of the multipoint
-  st_as_sf() %>% # make it a sf object again 
-  mutate(wwfName="Chukchi Peninsula tundra")
-```
-
-### 6. "East Siberian taiga" 
-```{r}
-wwf06 =  tunBorWwf %>% 
-    filter(wwfName=="East Siberian taiga") %>%
-    st_geometry() %>% # pull just geometry
-  st_combine() %>%  # from many points to a single multipoint
-  st_centroid() %>% # compute centroid of the multipoint
-  st_as_sf() %>% # make it a sf object again 
-  mutate(wwfName="East Siberian taiga")
-```
-
-
-### 7. "Interior Alaska-Yukon lowland taiga"
-```{r}
-wwf07 =  tunBorWwf %>% 
-    filter(wwfName=='Interior Alaska-Yukon lowland taiga') %>%
-    st_geometry() %>% # pull just geometry
-  st_combine() %>%  # from many points to a single multipoint
-  st_centroid() %>% # compute centroid of the multipoint
-  st_as_sf() %>% # make it a sf object again 
-  mutate(wwfName='Interior Alaska-Yukon lowland taiga')
-```
-
-### 8. "Interior Yukon-Alaska alpine tundra"
-```{r}
-wwf08 =  tunBorWwf %>% 
-    filter(wwfName=='Interior Yukon-Alaska alpine tundra') %>%
-    st_geometry() %>% # pull just geometry
-  st_combine() %>%  # from many points to a single multipoint
-  st_centroid() %>% # compute centroid of the multipoint
-  st_as_sf() %>% # make it a sf object again 
-  mutate(wwfName='Interior Yukon-Alaska alpine tundra')
-```
-
-### 9. "Muskwa-Slave Lake forests"
-```{r}
-wwf09 =  tunBorWwf %>% 
-    filter(wwfName=='Muskwa-Slave Lake forests') %>%
-    st_geometry() %>% # pull just geometry
-  st_combine() %>%  # from many points to a single multipoint
-  st_centroid() %>% # compute centroid of the multipoint
-  st_as_sf() %>% # make it a sf object again 
-  mutate(wwfName='Muskwa-Slave Lake forests')
-```
-
-### 10. "Northeast Siberian taiga"
-```{r}
-wwf10=  tunBorWwf %>% 
-    filter(wwfName=='Northeast Siberian taiga') %>%
-    st_geometry() %>% # pull just geometry
-  st_combine() %>%  # from many points to a single multipoint
-  st_centroid() %>% # compute centroid of the multipoint
-  st_as_sf() %>% # make it a sf object again 
-  mutate(wwfName='Northeast Siberian taiga')
-```
-
-### 11. "Northern Canadian Shield taiga"
-```{r}
-wwf11=  tunBorWwf %>% 
-    filter(wwfName=='Northern Canadian Shield taiga') %>%
-    st_geometry() %>% # pull just geometry
-  st_combine() %>%  # from many points to a single multipoint
-  st_centroid() %>% # compute centroid of the multipoint
-  st_as_sf() %>% # make it a sf object again 
-  mutate(wwfName='Northern Canadian Shield taiga')
-```
-### 12. "Northwest Territories taiga"
-```{r}
-( wwf12=  tunBorWwf %>% 
-    filter(wwfName=='Northwest Territories taiga') %>%
-    st_geometry() %>% # pull just geometry
-  st_combine() %>%  # from many points to a single multipoint
-  st_centroid() %>% # compute centroid of the multipoint
-  st_as_sf() %>% # make it a sf object again 
-  mutate(wwfName='Northwest Territories taiga')
-)
-```
-
-### 13. "Yamal-Gydan tundra"
-```{r}
-wwf13 =  tunBorWwf %>% 
-    filter(wwfName=="Yamal-Gydan tundra") %>%
-    st_geometry() %>% # pull just geometry
-  st_combine() %>%  # from many points to a single multipoint
-  st_centroid() %>% # compute centroid of the multipoint
-  st_as_sf() %>% # make it a sf object again 
-  mutate(wwfName="Yamal-Gydan tundra")
-```
-
-## Recombine WWF ecoregions
-```{r}
-( 
-  wwfCentroid = bind_rows(wwf01, wwf02, wwf03, wwf04, wwf05, wwf06, wwf07, wwf08, wwf09, wwf10, wwf11, wwf12, wwf13) %>% 
-    rename(geometry = x)
-)
-```
- 
-## Edit geometry of Beringa Upland and lowland to limit overlap
-```{r}
-wwfCentroid
-```
-Longitude: -165.43798
-Latitude: 64.52649
-```{r}
-st_geometry(wwfCentroid) <- st_sfc(
-    ifelse(wwfCentroid$wwfName == "Beringia upland tundra", st_sfc(st_point(c(-165.43798, 64.52649))), wwfCentroid$geometry),
-    crs = st_crs(wwfCentroid$geometry))
-```
-
-```{r}
-wwfCentroid
-```
-## Reproject and finalize
-```{r}
-( wwfCentroidreproj = wwfCentroid %>% 
-    st_transform(., crs = polarProj) %>% 
-    dplyr::mutate(x = sf::st_coordinates(.)[,1],
-                y = sf::st_coordinates(.)[,2]) %>%
-  left_join(., wwfPtSum, by='wwfName') %>%
-  mutate(prct = signif(percent,digits=3))
-  
-)
-
-
-```
-
-## Save WWF Centroids
-```{r eval=FALSE, include=FALSE}
-st_write(wwfCentroidreproj, "../outputs/spatialDataCreate/wwfEcoregionCentroid.shp", driver="ESRI Shapefile")
 ```
 
 

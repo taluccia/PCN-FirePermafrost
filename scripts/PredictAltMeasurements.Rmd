@@ -35,6 +35,9 @@ glimpse(data)
 unique(manies$msrDoy)
 ```
 
+```{r}
+( dieleman = data %>% filter(lastNm=="Dieleman_Baltzer_Turetsky") ) 
+```
 
 # Functions to standarize
 Formula Parts 
@@ -114,24 +117,22 @@ calc_B = function(x) {
 
 # Remove outliers, na, and INF
 ```{r}
-dataCombine %>% 
-  drop_na(predDepth) %>% 
-    filter_at(vars(predDepth), all_vars(!is.infinite(.)))  
-```
-```{r}
-dataCombine %>% filter(is.na(msrDepth)) 
-```
-
-```{r}
-50625-49997
+dataCombine %>% filter_at(vars(predDepth), all_vars(is.infinite(.)))
+dataCombine %>% filter(if_any(predDepth, is.infinite))
+dataCombine %>% filter(if_any(predDepth, is.na))
 ```
 
 
+
+# Remove Infinite values
 ```{r}
 ( cleanDataCombine = dataCombine %>% 
-    drop_na(predDepth) %>% 
     filter_at(vars(predDepth), all_vars(!is.infinite(.))) 
 )
+```
+
+```{r}
+unique(cleanDataCombine$lastNm)
 ```
 
 

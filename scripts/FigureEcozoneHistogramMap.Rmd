@@ -51,7 +51,7 @@ polarProj = "+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +x_0=0 +y_0=0 +datum=WG
 
 # Data
 ```{r}
-datacubePt = st_read("../data/dataCube/PermafrostFireEcozoneDatacube.shp", "PermafrostFireEcozoneDatacube")
+datacubePt = st_read("../data/spatialDataCreate/PermafrostFireEcozoneDatacube.shp", "PermafrostFireEcozoneDatacube")
 ```
 ```{r}
 datacubePt
@@ -59,35 +59,22 @@ datacubePt
 
 ## Predicted measurements
 ```{r}
-datacubePred = read_csv("../data/dataCube/DatacubePermafrostFirePredicted.csv")
+datacubePred = read_csv("../data/dataCube/PermafrostFireDatacubeFinal.csv")
 ```
 
 
-```{r}
-wwf = st_read("../data/spatialDataCreate/wwfEcoregionCentroid.shp", "wwfEcoregionCentroid")
-```
 
-```{r}
-wwf
-```
 
-```{r}
-res = st_read("../data/spatialDataCreate/resEcozoneCentroid.shp", "resEcozoneCentroid")
-```
 
-```{r}
-res
-```
 
-```{r}
-unique(res$resName)
-```
-```{r}
-resTarget = c("Arctic coastal tundra", "Arctic foothills tundra", "Beringia lowland tundra",  "Beringia upland tundra",              "Chukchi Peninsula tundra", "East Siberian taiga", "Interior Alaska-Yukon lowland taiga", "Interior Yukon-Alaska alpine tundra", "Muskwa-Slave Lake taiga",            "Northeast Siberian taiga",            "Northern Canadian Shield taiga",      "Northwest Territories taiga", "Yamal-Gydan tundra")
-```
+
 ## Resolve Polygons
 ```{r}
 resolve = st_read("../data/spatialData/RESOLVE_Ecoregions_and_Biomes/Biomes_and_Ecoregions_2017.shp", "Biomes_and_Ecoregions_2017")
+```
+
+```{r}
+resTarget = c("Arctic coastal tundra", "Arctic foothills tundra", "Beringia lowland tundra",  "Beringia upland tundra",              "Chukchi Peninsula tundra", "East Siberian taiga", "Interior Alaska-Yukon lowland taiga", "Interior Yukon-Alaska alpine tundra", "Muskwa-Slave Lake taiga",            "Northeast Siberian taiga",            "Northern Canadian Shield taiga",      "Northwest Territories taiga", "Yamal-Gydan tundra")
 ```
 
 ```{r}
@@ -157,8 +144,6 @@ nh_pp = st_transform(nh, crs = polarProj)
 
 artic_pp = st_transform(arctic, crs = polarProj)
 permafrost1_pp = st_transform(permafrost1, crs = polarProj)
-wwf_pp = st_transform(wwf, crs = polarProj)
-res_pp = st_transform(res, crs = polarProj)
 resolve1_pp = st_transform(resolve1, crs = polarProj)
 resolveAllpp = st_transform(resolve, crs = polarProj)
 ```
@@ -197,10 +182,8 @@ ymin: -25426070 xmax: 28628080 ymax: 8108557
  
  scale_color_manual(values = c("A" ="#fdae61","B" = "#ff6347", "C" = "#fee08b"), labels = c( "A" ="Tweedsmuir fire","B" = "Entiako fire", "C" = "Chelaslie fire" ), name = "Fire perimeters") +
 
-## Data check 
-```{r}
-res_pp
-```
+
+
 
 # Maps
 

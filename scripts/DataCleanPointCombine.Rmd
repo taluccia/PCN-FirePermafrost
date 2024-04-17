@@ -325,7 +325,8 @@ f5 %>% filter(is.na(thaw_depth))
 'SS33-877','SS33-877','SS33-9'), 'e7',      
                    ifelse(site_id %in% c('ZF20-10', 'ZF20-11', 'ZF20-12', 'ZF20-125', 'ZF20-4', 'ZF20-40', 'ZF20-43', 'ZF20-6', 'ZF20-8', 'ZF20-9', 'ZF20-9', 'HWY3-UB-1'), 'e8',
                 ifelse(site_id %in% c('ZF26-104', 'ZF26-112', 'ZF26-113', 'ZF26-118', 'ZF26-5', 'ZF26-50', 'ZF26-6', 'ZF26-66', 'ZF26-7', 'ZF26-96', 'ZF26-98', 'WEK-UB-1'), 'e9', NA)))))))))) %>%
-    mutate(submitNm="Dieleman") 
+    mutate(submitNm="Dieleman") %>%
+  drop_na(lat) # removes 1000 blank rows
 )
 ```
 
@@ -1044,7 +1045,7 @@ clean <- function(df){ df %>%
 ```
 
 
-## Apply functions
+## Apply clean function
 ```{r}
 f1_clean = clean(f1_dates)
 f2_clean = clean(f2_dates)
@@ -1080,7 +1081,7 @@ dataCube = dplyr::bind_rows(f1_clean, f2_clean, f3_clean, f4_clean, f5_clean, f6
 ```{r}
 dataCube
 ```
-Contributed data 53,468 rows
+Contributed data 52,468 rows
 ```{r}
 colnames(dataCube)
 ```
@@ -1112,17 +1113,75 @@ unique(dataCube$hitRock)
 unique(dataCube$gtProbe)
 ```
 
-```{r}
-#dataCube %>% filter(if_any(paired, is.na))
-#dataCube %>% filter(if_any(hitRock, is.na))
-dataCube %>% filter(hitRock == "y" ) 
-dataCube %>% filter(gtProbe == "y" ) 
+## Save contributed data
+Contributed data 52,468 rows
+```{r eval=FALSE, include=FALSE}
+write_csv(dataCube, '../outputs/dataCube/PermafrostFireContributedData.csv')
 ```
 
+## Final clean for predicting
+Contributed data 52,468 rows
+- remove missing Lat/Lon
+- remove missing paired
+- remove rock hits
+- remove greater than probe
+- remove missing depth measurements
+- remove missing day of month
+
+```{r}
+dataCube %>% filter(if_any(paired, is.na)) #166
+dataCube %>% filter(hitRock == "y" ) #853
+dataCube %>% filter(gtProbe == "y" ) #2237
+dataCube %>% filter(if_any(msrDepth, is.na)) #440
+dataCube %>% filter(day==-9999) #903
+```
+
+```{r}
+( dataCubeFinal = dataCube %>% 
+    drop_na(paired) %>% 
+    filter(!is.na(msrDoy)) %>% 
+    filter(!is.na(msrDepth)) %>%
+    filter(hitRock != "y" ) %>% 
+    filter(gtProbe != "y" ) 
+)
+```
+Data cube to predict on 48166 rows
+
+### Summary of data removed
+```{r}
+( difference = setdiff(dataCube,dataCubeFinal) )
+
+```
+
+```{r}
+( gtProbeY = difference %>% 
+    group_by(submitNm) %>%
+  count(submitNm,gtProbe, hitRock) 
+)
+```
+
+
+```{r}
+difference %>% 
+  dplyr::select(submitNm, paired, gtProbe, hitRock) %>%
+  pivot_longer(!submitNm, names_to = "name", values_to = "value") %>%
+    group_by(submitNm, name)  %>%
+  count(name, value) %>%
+  pivot_wider(names_from = name, values_from = c(value, n))
+
+```
+
+```{r}
+(pair = dataCube %>% filter(is.na(paired)) %>% dplyr::select(plotId, siteId, submitNm, paired) %>% group_by(plotId, siteId, submitNm) %>% summarize(n_paired = n()))
+msrDoy = dataCube %>% filter(is.na(msrDoy))  
+msrDepth = dataCube %>% filter(is.na(msrDepth))
+hitrock = dataCube %>% filter(hitRock == "y" )  
+gtprobe = dataCube %>%filter(gtProbe == "y" ) 
+```
 ## Save Datacube as csv
 
 ```{r eval=FALSE, include=FALSE}
-write_csv(dataCube, '../outputs/dataCube/PermafrostFireDataCube.csv')
+write_csv(dataCubeFinal, '../outputs/dataCube/PermafrostFireDataCube.csv')
 ```
 
 # Create points shapefile
@@ -1136,11 +1195,7 @@ df_to_sf <- function(x){
 
 ## Drop Lat Lon NA and convert to shapefile 
 ```{r}
-( dataCubePts = dataCube %>% 
-    drop_na(lat, lon, paired) %>% 
-    filter(!is.na(msrDoy)) %>% 
-    filter(hitRock == "n" ) %>% 
-    filter(gtProbe == "n" ) %>%
+( dataCubePts = dataCubeFinal %>% 
     df_to_sf() )
 ```
 
