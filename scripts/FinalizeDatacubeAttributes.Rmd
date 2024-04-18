@@ -73,9 +73,12 @@ datacubePred$distur[datacubePred$siteId == "lutose_unburn"] <- "unburned"
 ## Update TSF for unburned
 ```{r}
 datacubePred1$tsf[datacubePred1$distur == "unburned"] <- "u"
-
+datacubePred1$resName[datacubePred1$paired == "p5"] <- "Arctic foothills tundra"
 ```
 
+```{r}
+datacubePred1 %>% filter(paired=="p5")
+```
 
 ```{r}
 unique(datacubePred1$tsf)
@@ -85,7 +88,17 @@ unique(datacubePred1$tsf)
 datacubePred1 %>% filter(if_any(tsf, is.na))
 ```
 
+# Select final columns of interest
 
+```{r}
+( datacubePred2 = datacubePred1 %>%
+  dplyr::select(plotId:msrDepth, predDoy:tsf, resBiomeNm, resName, permaExtent)
+)
+```
+
+```{r}
+datacubePred2 %>% filter(resName =="Arctic coastal tundra" )
+```
 
 ## Save FInal data cube
 ```{r}

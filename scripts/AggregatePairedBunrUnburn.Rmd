@@ -50,13 +50,16 @@ unique(sort(datacubePred$resName))
 datacubePred %>% filter(tsf==0)
 ```
 
+```{r}
+datacubePred %>% filter(paired=="p5")
+```
 
 # aggregate burn and unburned pairs with summary stats
 
 ```{r}
 ( aggregate = datacubePred %>% 
     drop_na(paired) %>%
-  group_by(resName, submitNm, distur, paired, fireYr, tsf) %>%
+  group_by(resBiomeNm, resName, submitNm, distur, paired, fireYr, tsf) %>%
   summarise(n = n(),
             mean = mean(predDepth),
             sd   = sd(predDepth, na.rm=TRUE),
@@ -87,6 +90,13 @@ unique(aggregate$tsf)
 aggregate 
 ```
 
+```{r}
+unique(aggregate$resName)
+```
+
+
+
+# Save 
 ```{r}
 write_csv(aggregate , '../outputs/dataCube/AggregatedBurnUnburn.csv')
 ```
