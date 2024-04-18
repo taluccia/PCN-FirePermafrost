@@ -72,7 +72,7 @@ datacubePred$distur[datacubePred$siteId == "lutose_unburn"] <- "unburned"
 
 ## Update TSF for unburned
 ```{r}
-datacubePred1$tsf[datacubePred1$distur == "unburned"] <- "NA"
+datacubePred1$tsf[datacubePred1$distur == "unburned"] <- "u"
 
 ```
 
@@ -81,8 +81,9 @@ datacubePred1$tsf[datacubePred1$distur == "unburned"] <- "NA"
 unique(datacubePred1$tsf)
 ```
 
-
-
+```{r}
+datacubePred1 %>% filter(if_any(tsf, is.na))
+```
 
 
 
