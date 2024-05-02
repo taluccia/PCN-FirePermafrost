@@ -36,84 +36,90 @@ comp_theme = theme_bw() + theme(legend.position = "bottom") +
 # Data
 
 ## Predicted measurements
+'../outputs/dataCube/AggregatedBurnUnburn.csv')
 ```{r}
-datacubePred = read_csv("../data/dataCube/PermafrostFireDatacubeFinal.csv")
+aggregate = read_csv("../data/aggregate/AggregatedBurnUnburnPairs.csv")
+```
+```{r}
+aggregateBiome = read_csv("../data/aggregate/AggregatedBurnUnburnBiome.csv")
 ```
 
 ```{r}
-datacubePred
-```
-# Summary information
-
-```{r}
-unique(sort(datacubePred$fireYr))
-```
-```{r}
-unique(sort(datacubePred$siteId))
-```
-
-```{r}
-unique(sort(datacubePred$resName))
-```
-
-# Look at specific data
-```{r}
-datacubePred %>% filter(tsf==0)
-```
-```{r}
-datacubePred1 = datacubePred %>%
-  mutate(tsf = str_replace(tsf, 'unburned', 'u')) 
-```
-
-# aggregate burn and unburned pairs with summary stats
-
-```{r}
-( aggregate = datacubePred %>% 
-    drop_na(paired) %>%
-  group_by(resName, submitNm, distur, paired, fireYr, tsf) %>%
-  summarise(n = n(),
-            mean = mean(predDepth),
-            sd   = sd(predDepth, na.rm=TRUE),
-            se   = sd / sqrt(n))
-)
-```
-```{r}
-aggregate$tsf[aggregate$distur == "unburned"] <- "u"
-
-```
-```{r}
-unique(sort(aggregate$tsf))
-```
-
-```{r}
-aggregate$tsf = factor(aggregate$tsf, levels = c("u", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "12", "13", "14", "15", "16", "17", "18","19", "20", "21", "29", "30", "31", "32",  "33", "35", "36", "40", "41", "42", "45", "46", "47", "48", "49", "52"))
+depthChange = read_csv("../data/aggregate/AggregatedDepthChange.csv")
 ```
 
 
+```{r}
+depthChangeBiome = read_csv("../data/aggregate/AggregatedDepthChangeBiome.csv")
+```
+# Add factor levels for TSF
+
+```{r}
+aggregate$tsf = factor(aggregate$tsf, levels = c("u", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17","19", "20", "21", "29", "30", "31", "32",  "33", "35", "36", "39", "40", "41", "45", "46", "47", "48", "49", "50", "52", "114"))
+```
 
 ```{r}
 unique(aggregate$tsf)
 ```
 
+```{r}
+aggregateBiome$tsf = factor(aggregateBiome$tsf, levels = c("u", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17","19", "20", "21", "29", "30", "31", "32",  "33", "35", "36", "39", "40", "41", "45", "46", "47", "48", "49", "50", "52", "114"))
+```
 
+```{r}
+unique(aggregateBiome$tsf)
+```
+
+```{r}
+aggregateBiome$permaExtent <- fct_recode(aggregateBiome$permaExtent, "Continuous"= "C", "Discontinuous"="D", "Sporadic"="S")
+```
+
+```{r}
+unique(aggregateBiome$permaExtent)
+```
+
+```{r}
+depthChange$tsf = factor(depthChange$tsf, levels = c("u", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17","19", "20", "21", "29", "30", "31", "32",  "33", "35", "36", "39", "40", "41", "45", "46", "47", "48", "49", "50", "52", "114"))
+```
+
+```{r}
+unique(depthChange$tsf)
+```
+
+```{r}
+depthChangeBiome$tsf = factor(depthChangeBiome$tsf, levels = c("u", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17","19", "20", "21", "29", "30", "31", "32",  "33", "35", "36", "39", "40", "41", "45", "46", "47", "48", "49", "50", "52", "114"))
+```
+
+```{r}
+unique(depthChange$tsf)
+```
+
+```{r}
+unique(depthChangeBiome$permaExtent)
+```
+
+```{r}
+depthChangeBiome$permaExtent <- fct_recode(depthChangeBiome$permaExtent, "Continuous"= "C", "Discontinuous"="D", "Sporadic"="S")
+```
+
+```{r}
+unique(depthChangeBiome$permaExtent)
+```
+
+# View data frames
 
 ```{r}
 aggregate 
-```
-
-```{r}
-( aggregatePaired = datacubePred %>% 
-    drop_na(paired) %>%
-  group_by(resName, submitNm, distur, paired, fireYr) %>%
-  summarise(n = n(),
-            mean = mean(predDepth),
-            sd   = sd(predDepth, na.rm=TRUE),
-            se   = sd / sqrt(n))
-)
+aggregateBiome
+depthChange
+depthChangeBiome
 ```
 
 
-# Plot
+
+
+
+#  Boxplots
 
 ## Burned Unburned
 ```{r}
@@ -137,41 +143,27 @@ aggregate
 ```
 
 ```{r eval=FALSE, include=FALSE}
-ggsave("../figures/AggregateBurnedUnburned.png", plot = pairedBoxplots, width = 6, height =5, units = c("in"), dpi=600, bg = "white" )
+ggsave("../figures/AggregateBurnedUnburnedBoxPlot.png", plot = pairedBoxplots, width = 6, height =5, units = c("in"), dpi=600, bg = "white" )
 ```
 
-## Mean with Error bars by pairs By submit name
-```{r}
-pd <- position_dodge(0.5) # move them .05 to the left and right
 
-( plotPairs = ggplot(aggregatePaired, aes(x = paired, y=mean, color=distur)) +
-  #geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=.1, size=.3, position=pd) +
-  geom_point(position=pd, size=1) +
-  scale_color_manual(values=c('#fc8d59', '#91bfdb'), name="", labels = c('Burned', 'Unburned')) +
-  labs(x="", y="Depth (cm)", ) +
- facet_wrap(~submitNm, scales = "free", ncol=4) +
-  comp_theme +
-    theme(axis.text.y = element_text(size=5),
-          axis.text.x = element_text(size=5, angle=45),
-   strip.background = element_rect(color="white", fill="white", size=1.5, linetype="solid"),
-  strip.text.x = element_text(size = 8)) 
-)
 
-```
-width = 6, height =5, units = c("in"),
-```{r eval=FALSE, include=FALSE}
-ggsave("../figures/AggregateBurnedUnburnedPairs.png", plot = plotPairs,  dpi=600, bg = "white" )
-```
 
-# Means with error Bars with tsf
+# TSF Burned Unburned Mean with SE
 
 ```{r}
-( plotMeanTSF <- ggplot(aggregate, aes(x = tsf, y=mean, color=distur, group=tsf)) +
+( plotBiomeTSF <- ggplot(aggregateBiome, aes(x = tsf, y=mean, color=distur, group=tsf)) +
     geom_point() +
       scale_color_manual(values=c('#fc8d59', '#91bfdb'), name="", labels = c('Burned', 'Unburned')) +
   labs(x="Time since fire", y="Depth (cm)") +
-  facet_wrap(~resName, scales = "free") +
-  comp_theme +
+    #facet_grid(vars(resBiome), vars(permaExtent), scales="free") +
+  facet_wrap(~resBiome + permaExtent, scales = "free") +
+theme_bw() + 
+  theme(legend.position = c(.8, .3)) +  
+  theme(panel.grid.major = element_blank()) +
+    theme(axis.title.y = element_text(size = 11, hjust = 0.5, vjust = 1.1),
+        axis.text.x = element_text(size = 10, color = "black"),
+        axis.text.y = element_text(size = 10, color = "black")) +
     theme(
           axis.text.y = element_text(size=5),
           axis.text.x = element_text(size=5, angle=45),
@@ -181,48 +173,39 @@ ggsave("../figures/AggregateBurnedUnburnedPairs.png", plot = plotPairs,  dpi=600
 ```
 
 ```{r eval=FALSE, include=FALSE}
-ggsave("../figures/AggregateBurnedUnburnedTsf.png", plot = plotMeanTSF, width = 6, height =5, units = c("in"), dpi=600, bg = "white" )
+ggsave("../figures/AggregateBurnedUnburnedBiomeTsf.png", plot = plotBiomeTSF, width = 6, height =5, units = c("in"), dpi=600, bg = "white" )
 ```
 
-# MEan TSF repeat measures
+
 ```{r}
-( aggregateUnburned = datacubePred %>% 
-    drop_na(paired) %>%
-    filter(distur =="unburned") %>%
-  group_by(resName, submitNm, distur, paired, fireYr, tsf) %>%
-  summarise(n = n(),
-            mean = mean(predDepth),
-            sd   = sd(predDepth, na.rm=TRUE),
-            se   = sd / sqrt(n))  %>%
-    dplyr::select(resName:fireYr, mean, se) %>%
-  rename(fireYrUnburned = fireYr, mean_unburned = mean, se_unburned = se, disturUnburn = distur)
+depthChangeBiome
+```
+# By Biome
+```{r}
+( plotDepthChangeBiome = ggplot(depthChangeBiome, aes(x = tsf, y=depthChange)) +
+  geom_hline(yintercept=0, color="gray", size = 3, alpha = .5) + 
+   geom_point(color='#5e4fa2', size = 3, shape = 21) +
+
+      #scale_color_manual(values=c('#1b9e77','#d95f02','#7570b3','#e7298a','#66a61e','#e6ab02','#a6761d'), name="") +
+  
+  labs(x="Time since fire", y="Change in depth (cm)") +
+     #facet_grid(vars(resBiome), vars(permaExtent), scales="free") +
+  facet_wrap(~resBiome + permaExtent, scales = "free") +
+  comp_theme +
+    theme(legend.position = "none",
+          axis.text.y = element_text(size=5),
+          axis.text.x = element_text(size=5, angle=45),
+          strip.background = element_rect( color="white", fill="white", size=1.5, linetype="solid" )) +
+    theme(strip.text.x = element_text(size = 6))
 )
 ```
 
-```{r}
-( aggregateBurned = datacubePred %>% 
-    drop_na(paired) %>%
-    filter(distur =="burned") %>%
-  group_by(resName, submitNm, distur, paired, fireYr, tsf) %>%
-  summarise(n = n(),
-            mean = mean(predDepth),
-            sd   = sd(predDepth, na.rm=TRUE),
-            se   = sd / sqrt(n))  %>%
-    dplyr::select(resName:fireYr, tsf, mean, se) %>%
-  rename(fireYrBurned = fireYr, mean_burned = mean, se_burned = se, disturBurn = distur) 
-)
-```
-
-```{r}
-( depthChange = aggregateBurned %>% 
-    left_join(aggregateUnburned, by=c("paired", "submitNm", "resName")) %>%
-  drop_na(disturUnburn) %>%
-  mutate(depthChange = mean_burned-mean_unburned)
-)
+```{r eval=FALSE, include=FALSE}
+ggsave("../figures/AggregateDepthChangeTsfBiome.png", plot = plotDepthChangeBiome,  width = 6, height =5, units = c("in"), dpi=600, bg = "white" )
 ```
 
 
-
+# By Ecozone
 ```{r}
 ( plotDepthChange = ggplot(depthChange, aes(x = tsf, y=depthChange)) +
   geom_hline(yintercept=0, color="gray", size = 3, alpha = .5) + 
@@ -242,25 +225,5 @@ ggsave("../figures/AggregateBurnedUnburnedTsf.png", plot = plotMeanTSF, width = 
 ```
 
 ```{r eval=FALSE, include=FALSE}
-ggsave("../figures/AggregateDepthChangeTsf.png", plot = plotDepthChange,  dpi=600, bg = "white" )
-```
-
-
-# By biome
-```{r}
-( plotDepthChange = ggplot(depthChange, aes(x = tsf, y=depthChange)) +
-  geom_hline(yintercept=0, color="gray", size = 3, alpha = .5) + 
-   geom_point(color='#5e4fa2', size = 3, shape = 21) +
-
-      #scale_color_manual(values=c('#1b9e77','#d95f02','#7570b3','#e7298a','#66a61e','#e6ab02','#a6761d'), name="") +
-  
-  labs(x="Time since fire", y="Change in depth (cm)") +
-  facet_wrap(~resBiome, scales = "free") +
-  comp_theme +
-    theme(legend.position = "none",
-          axis.text.y = element_text(size=5),
-          axis.text.x = element_text(size=5, angle=45),
-          strip.background = element_rect( color="white", fill="white", size=1.5, linetype="solid" )) +
-    theme(strip.text.x = element_text(size = 6))
-)
+ggsave("../figures/AggregateDepthChangeTsfEcozone.png", plot = plotDepthChange,  width = 6, height =5, units = c("in"), dpi=600, bg = "white" )
 ```

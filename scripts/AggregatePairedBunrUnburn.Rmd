@@ -58,8 +58,7 @@ datacubePred %>% filter(paired=="p5")
 
 ```{r}
 ( aggregate = datacubePred %>% 
-    drop_na(paired) %>%
-  group_by(resBiomeNm, resName, submitNm, distur, paired, fireYr, tsf) %>%
+  group_by(resBiome, resName, submitNm, distur, permaExtent, paired, fireYr, tsf) %>%
   summarise(n = n(),
             mean = mean(predDepth),
             sd   = sd(predDepth, na.rm=TRUE),
@@ -98,5 +97,112 @@ unique(aggregate$resName)
 
 # Save 
 ```{r}
-write_csv(aggregate , '../outputs/dataCube/AggregatedBurnUnburn.csv')
+write_csv(aggregate , '../outputs/aggregate/AggregatedBurnUnburnPairs.csv')
+```
+
+
+# aggregate burn and unburned at Biome level with summary stats
+
+```{r}
+( aggregateBiome = datacubePred %>% 
+  group_by(resBiome, distur, permaExtent, tsf) %>%
+  summarise(n = n(),
+            mean = mean(predDepth),
+            sd   = sd(predDepth, na.rm=TRUE),
+            se   = sd / sqrt(n))
+)
+```
+
+```{r}
+write_csv(aggregateBiome , '../outputs/aggregate/AggregatedBurnUnburnBiome.csv')
+```
+
+# Depth Change by Ecozone
+
+```{r}
+( aggregateUnburned = datacubePred %>% 
+    drop_na(paired) %>%
+    filter(distur =="unburned") %>%
+  group_by(resName, submitNm, distur, permaExtent, paired, fireYr, tsf) %>%
+  summarise(n = n(),
+            mean = mean(predDepth),
+            sd   = sd(predDepth, na.rm=TRUE),
+            se   = sd / sqrt(n))  %>%
+    dplyr::select(resName:fireYr, mean, se) %>%
+  rename(fireYrUnburned = fireYr, mean_unburned = mean, se_unburned = se, disturUnburn = distur)
+)
+```
+
+```{r}
+( aggregateBurned = datacubePred %>% 
+    drop_na(paired) %>%
+    filter(distur =="burned") %>%
+  group_by(resName, submitNm, distur,permaExtent, paired, fireYr, tsf) %>%
+  summarise(n = n(),
+            mean = mean(predDepth),
+            sd   = sd(predDepth, na.rm=TRUE),
+            se   = sd / sqrt(n))  %>%
+    dplyr::select(resName:fireYr, tsf, mean, se) %>%
+  rename(fireYrBurned = fireYr, mean_burned = mean, se_burned = se, disturBurn = distur) 
+)
+```
+
+```{r}
+( depthChange = aggregateBurned %>% 
+    left_join(aggregateUnburned, by=c("paired", "submitNm", "resName", "permaExtent")) %>%
+  drop_na(disturUnburn) %>%
+  mutate(depthChange = mean_burned-mean_unburned)
+)
+```
+
+```{r}
+write_csv(depthChange , '../outputs/aggregate/AggregatedDepthChange.csv')
+```
+
+# Depth Change by Biome
+
+```{r}
+datacubePred
+```
+
+```{r}
+( aggregateUnburnedB = datacubePred %>% 
+    drop_na(paired) %>%
+    filter(distur =="unburned") %>%
+  group_by(resBiome, distur, permaExtent, tsf) %>%
+  summarise(n = n(),
+            mean = mean(predDepth),
+            sd   = sd(predDepth, na.rm=TRUE),
+            se   = sd / sqrt(n))  %>%
+    dplyr::select(resBiome:tsf, mean, se) %>%
+  rename(mean_unburned = mean, se_unburned = se, disturUnburn = distur)
+)
+```
+
+```{r}
+( aggregateBurnedB = datacubePred %>% 
+    drop_na(paired) %>%
+    filter(distur =="burned") %>%
+  group_by(resBiome, distur, permaExtent, tsf) %>%
+  summarise(n = n(),
+            mean = mean(predDepth),
+            sd   = sd(predDepth, na.rm=TRUE),
+            se   = sd / sqrt(n))  %>%
+    dplyr::select(resBiome:tsf, mean, se) %>%
+  rename(mean_burned = mean, se_burned = se, disturBurn = distur) 
+)
+```
+
+```{r}
+( depthChangeBiome = aggregateBurnedB %>% 
+    left_join(aggregateUnburnedB, by=c("resBiome", "permaExtent")) %>%
+  drop_na(disturUnburn) %>%
+  mutate(depthChange = mean_burned-mean_unburned) %>%
+  dplyr::select(-tsf.y) %>%
+    rename(tsf = tsf.x)
+)
+```
+
+```{r}
+write_csv(depthChangeBiome , '../outputs/aggregate/AggregatedDepthChangeBiome.csv')
 ```
