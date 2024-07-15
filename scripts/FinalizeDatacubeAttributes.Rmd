@@ -92,17 +92,15 @@ datacubePred1 %>% filter(if_any(tsf, is.na))
 
 ```{r}
 ( datacubePred2 = datacubePred1 %>%
-  dplyr::select(plotId:msrDepth, predDoy:tsf, resBiomeNm, resName, permaExtent)
+  dplyr::select(plotId:msrDepth, predDoy:tsf, resBiomeNm, resName, permaExtent) %>%
+    rename(resBiome = resBiomeNm)
 )
 ```
 
-```{r}
-datacubePred2 %>% filter(resName =="Arctic coastal tundra" )
-```
 
 ## Save FInal data cube
 ```{r}
-write_csv(datacubePred1, '../outputs/dataCube/PermafrostFireDatacubeFinal.csv')
+write_csv(datacubePred2, '../outputs/dataCube/PermafrostFireDatacubeFinal.csv')
 ```
 
 
