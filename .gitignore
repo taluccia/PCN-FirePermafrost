@@ -50,6 +50,7 @@ rsconnect/
 
 # For Mac users computer specific files
 **/.DS_Store
+._*
 #**/._.DS_Store
 #**/scripts/._FiguresPredictedvsMeasured.Rmd
 **/._PCN-FirePermafrost.Rproj
