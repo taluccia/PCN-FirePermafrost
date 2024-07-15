@@ -1,0 +1,79 @@
+---
+title: "Summarize Data Attributes"
+author: "Anna Talucci"
+date: "2024-04-14"
+output: html_document
+---
+
+# clear environment
+```{r}
+rm(list=ls())
+```
+
+# Overview
+Summaries final data cube attributes
+
+
+# Packages
+
+```{r}
+library(tidyverse)
+library(lubridate)
+library(ggpubr)
+library(ggnewscale)
+library(ggthemes)
+```
+
+
+# Data
+
+## Predicted measurements
+```{r}
+datacubePred = read_csv("../data/dataCube/PermafrostFireDatacubeFinal.csv")
+```
+
+
+# Summary information
+
+```{r}
+unique(sort(datacubePred$fireYr))
+```
+```{r}
+unique(sort(datacubePred$siteId))
+```
+
+```{r}
+unique(sort(datacubePred$resName))
+```
+```{r}
+unique(sort(datacubePred$submitNm))
+```
+
+```{r}
+unique(sort(datacubePred$cntryId))
+```
+
+```{r}
+unique(sort(datacubePred$resBiomeNm))
+```
+```{r}
+datacubePred %>% group_by(cntryId) %>% summarise(n=n())
+```
+
+```{r}
+datacubePred2 %>% group_by(permaExtent) %>% summarise(n=n())
+```
+```{r}
+datacubePred2 %>% group_by(resBiomeNm) %>% summarise(n=n())
+```
+
+
+
+```{r}
+datacubePred1 %>% group_by(submitNm, fireYr, year) %>% summarize(n = n())
+```
+
+```{r}
+datacubePred1 %>% filter(submitNm=="Buma") %>% filter(siteId %in% c('STEESE_1','STEESE_2', 'STEESE_3'))
+```
+

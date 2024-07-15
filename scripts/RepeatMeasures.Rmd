@@ -1,0 +1,35 @@
+---
+title: "Repeat Measures"
+author: "Anna Talucci"
+date: "2024-04-12"
+output: html_document
+---
+
+# Overview
+Filter for repeat measures
+
+# Packages
+
+# Data
+
+# Repeat measures
+
+```{r}
+names(datacubePred1)
+```
+
+```{r}
+datacubePred1 %>% group_by(submitNm, siteId, paired, fireYr, year) %>% summarize(n = n())
+```
+
+```{r}
+(repeatMeasures = datacubePred1 %>% group_by(submitNm, siteId, paired, fireYr) %>% summarize(numberYrsMeasured = n_distinct(year)) %>% filter(fireYr!=-9999) %>% filter(numberYrsMeasured>1) )
+```
+
+```{r}
+unique(repeatMeasures$paired)
+```
+
+```{r}
+write_csv(repeatMeasures, '../outputs/RepeatMeasuresFromDataCube.csv')
+```

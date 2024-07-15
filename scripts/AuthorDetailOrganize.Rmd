@@ -1,0 +1,55 @@
+---
+title: "Author Details Organize"
+author: "Anna Talucci"
+date: "2024-05-29"
+output: html_document
+---
+
+# clear environment
+```{r}
+rm(list=ls())
+```
+
+# Overview
+
+
+# Packages
+
+```{r}
+library(tidyverse)
+```
+
+# Data
+
+
+```{r}
+authors = read_csv("../data/authorDetails/AuthorDetails-Co-authorDetails.csv")
+```
+
+```{r}
+authors
+```
+
+
+```{r}
+( aa = authors %>%
+  rename(nameManuscript = 'Name as it should appear on the Manuscript', department = 'Department (optional)', institution = 'University/Institution', postalCode = 'postal code') %>%
+dplyr::select(OrderAuthor, nameManuscript, department, institution, city, postalCode, country) %>%
+  unite("manuscriptAffilation", c(department, institution, city, postalCode, country), sep=", ", remove = FALSE, na.rm = TRUE) %>%
+  arrange(OrderAuthor) %>%
+  group_by(manuscriptAffilation) %>%
+  mutate(orderAffiliation = cur_group_id()) %>%
+  dplyr::select(!c(department, institution, city, postalCode, country)) %>%
+  unite("nameAffilation", c(nameManuscript, OrderAuthor, orderAffiliation), sep=", ", remove = FALSE, na.rm = TRUE) %>%
+  unite("AffilationOrder", c( orderAffiliation, manuscriptAffilation), sep=", ", remove = FALSE, na.rm = TRUE) %>%
+  ungroup() %>%
+  dplyr::select(nameAffilation, AffilationOrder)
+
+)
+
+  
+```
+
+```{r}
+write_csv(aa, "../outputs/authorAffiliationOrganize.csv")
+```
