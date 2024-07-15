@@ -126,6 +126,7 @@ depthChangeBiome
 ( pairedBoxplots = ggplot(aggregate, aes(x = distur, y=mean, color=distur)) +
   geom_boxplot() +
   scale_color_manual(values=c('#fc8d59', '#91bfdb'), name="", labels = c('Burned', 'Unburned')) +
+    scale_y_reverse() +
   labs(x="", y="Depth (cm)") +
   facet_wrap(~resName, scales = "free_y") +
   comp_theme +
@@ -155,6 +156,7 @@ ggsave("../figures/AggregateBurnedUnburnedBoxPlot.png", plot = pairedBoxplots, w
 ( plotBiomeTSF <- ggplot(aggregateBiome, aes(x = tsf, y=mean, color=distur, group=tsf)) +
     geom_point() +
       scale_color_manual(values=c('#fc8d59', '#91bfdb'), name="", labels = c('Burned', 'Unburned')) +
+    scale_y_reverse() +
   labs(x="Time since fire", y="Depth (cm)") +
     #facet_grid(vars(resBiome), vars(permaExtent), scales="free") +
   facet_wrap(~resBiome + permaExtent, scales = "free") +
@@ -187,7 +189,7 @@ depthChangeBiome
    geom_point(color='#5e4fa2', size = 3, shape = 21) +
 
       #scale_color_manual(values=c('#1b9e77','#d95f02','#7570b3','#e7298a','#66a61e','#e6ab02','#a6761d'), name="") +
-  
+  scale_y_reverse() +
   labs(x="Time since fire", y="Change in depth (cm)") +
      #facet_grid(vars(resBiome), vars(permaExtent), scales="free") +
   facet_wrap(~resBiome + permaExtent, scales = "free") +
@@ -212,7 +214,7 @@ ggsave("../figures/AggregateDepthChangeTsfBiome.png", plot = plotDepthChangeBiom
    geom_point(color='#5e4fa2', size = 3, shape = 21) +
 
       #scale_color_manual(values=c('#1b9e77','#d95f02','#7570b3','#e7298a','#66a61e','#e6ab02','#a6761d'), name="") +
-  
+  scale_y_reverse() +
   labs(x="Time since fire", y="Change in depth (cm)") +
   facet_wrap(~resName, scales = "free") +
   comp_theme +
