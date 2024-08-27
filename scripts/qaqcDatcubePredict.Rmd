@@ -1,0 +1,125 @@
+---
+title: "QAQC Datacube"
+author: "Anna Talucci"
+date: "2024-01-30"
+output: html_document
+---
+
+
+# clear environment
+```{r}
+rm(list=ls())
+```
+
+# Overview
+QAQC of full predicted datacube. Identify NAs for key variables (e.g., DOY, msrDepth, hitRock, gtProbe).
+
+
+# Packages
+
+```{r}
+library(tidyverse)
+library(lubridate)
+```
+
+# Data
+
+```{r}
+datacubePred = read_csv("../data/dataCube/DatacubePermafrostFirePredicted.csv")
+```
+
+
+
+# QAQC
+
+```{r}
+datacubePred
+```
+
+```{r}
+( naPredDepth = datacubePred %>% filter(is.na(predDepth)) )
+```
+
+```{r}
+unique(naPredDepth$lastNm)
+```
+
+```{r}
+( infPredDepth = datacubePred %>% filter(is.infinite(predDepth)) )
+```
+```{r}
+infPredDepth %>% filter(submitNm=="Manies")
+infPredDepth %>% filter(submitNm=="Dieleman")
+infPredDepth %>% filter(submitNm=="Natali")
+```
+
+
+```{r}
+unique(infPredDepth$submitNm)
+```
+
+
+```{r}
+naPredDepth %>% filter(lastNm=="Manies") # sum_A not calculating correctly need to check for id 1-41 because the temperatures for the days preceeding 117 are all below freezing
+naPredDepth %>% filter(lastNm=="O'Donnell") # missing msrDepth n=5 missing in submitted
+naPredDepth %>% filter(lastNm=="Rocha") # missing msrDepth n= 390 missing in submitted
+naPredDepth %>% filter(lastNm=="Loranty") # missing msrDepth n=9 missing in submitted
+naPredDepth %>% filter(lastNm=="Dieleman_Baltzer_Turetsky") # missing day of month n=1841
+naPredDepth %>% filter(lastNm=="Natali") # Something weird with the Temperature date from ERA5 need to check n=237 on missing n=24 msrDepth in submitted data
+naPredDepth %>% filter(lastNm=="Baillargeon, MacArthur, Natali, Sistla") # missing msrDepth n=8 missing in submitted
+naPredDepth %>% filter(lastNm=="Sizov, Soromotin, Brodt") # missing msrDepth n=4 missing in submitted
+```
+
+
+
+## Large depth values
+
+```{r}
+datacubePred %>% filter(msrDepth > 300)
+
+```
+
+```{r}
+datacubePred %>% filter(msrDepth < 0)
+
+```
+
+
+
+# Check pairs 
+
+```{r}
+( rocha = datacubePred %>% 
+  mutate(TimeSinceFire = year-fireYr) %>%
+  filter(lastNm=="Rocha") )
+rocha %>% filter(siteId=="Anaktuvuk River fire")
+unique(rocha$fireYr)
+unique(rocha$siteId)
+```
+```{r}
+rocha = datacubePred %>% 
+  mutate(TimeSinceFire = year-fireYr) %>%
+  filter(paired %in% c("p5", "p6"))
+arf = datacubePred  %>% filter(siteId=="Anaktuvuk River fire")
+job = datacubePred  %>% filter(siteId=="Jones Old Burn")
+
+rocha
+unique(arf$fireYr)
+unique(job$fireYr)
+```
+
+```{r}
+write_csv(rocha, '../outputs/qaqc/predioctRochaMissingFireYear.csv')
+```
+
+```{r}
+datacubePred %>% 
+  mutate(TimeSinceFire = year-fireYr) %>%
+  filter(lastNm=="Natali") %>%
+  group_by(siteId, distur, paired, fireYr) %>%
+  summarize(n=n())
+```
+
+
+
+**THE END**
