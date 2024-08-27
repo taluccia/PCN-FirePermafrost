@@ -121,6 +121,19 @@ f1_dates %>% distinct(msrDoy, year, date)
 ```
 
 
+```{r}
+#Summarize missing data issues
+f1_missingSum = f1_dates %>% summarize(ct = n(),
+                       day = sum(is.na(day)),
+                       FireYear = sum(is.na(fire_year)),
+                       gtp = sum(gt_probe=="y"),
+                       hit_rock = sum(hit_rock=="y"), 
+                       thaw_depth = sum(is.na(thaw_depth)),
+                       NoPair = sum(is.na(paired))
+                       ) %>%
+  mutate(submitNm = "Baillargeon")
+```
+
 ## 2. Breen
 ```{r}
 f2 <- read.csv(f[2], header = TRUE)
@@ -164,6 +177,19 @@ f2_dates %>% distinct(site_id, plot_id, burn_unburn)
 f2_dates %>% distinct(msrDoy, year, date)
 ```
 
+```{r}
+#Summarize missing data issues
+f2_missingSum = f2_dates %>% summarize(ct = n(),
+                       day = sum(is.na(day)),
+                       FireYear = sum(is.na(fire_year)),
+                       gtp = sum(gt_probe=="y"),
+                       hit_rock = sum(hit_rock=="y"), 
+                       thaw_depth = sum(is.na(thaw_depth)),
+                       NoPair = sum(is.na(paired))
+                       ) %>%
+  mutate(submitNm = "Breen")
+```
+
 ## 3. Buma
 
 ```{r}
@@ -205,7 +231,7 @@ str(f3)
     dplyr::select(-HIT) %>%
   mutate(date = as.Date(with(., paste(year, month, day,sep="-")), "%Y-%m-%d")) %>%
   mutate(msrDoy = yday(date))  %>%
-  mutate(paired = ifelse(site_id %in% c('DALTON_1', 'DALTON_2', 'DALTON_3', 'DALTON_0'), "c1", 'NA')) %>%
+  mutate(paired = ifelse(site_id %in% c('DALTON_1', 'DALTON_2', 'DALTON_3', 'DALTON_0'), "c1", NA)) %>%
     mutate(submitNm="Buma")
 )
 ```
@@ -217,6 +243,20 @@ f3_dates %>% distinct(site_id, burn_unburn)
 f3_dates %>% distinct(site_id, plot_id, fire_id, burn_unburn) 
 f3_dates %>% distinct(msrDoy, year, date)
 ```
+
+```{r}
+#Summarize missing data issues
+f3_missingSum = f3_dates %>% summarize(ct = n(),
+                       day = sum(is.na(day)),
+                       FireYear = sum(is.na(fire_year)),
+                       gtp = sum(gt_probe=="y"),
+                       hit_rock = sum(hit_rock=="y"), 
+                       thaw_depth = sum(is.na(thaw_depth)),
+                       NoPair = sum(is.na(paired))
+                       ) %>%
+  mutate(submitNm = "Buma")
+```
+
 ## 4. Diaz-Veraverbeke
 
 ```{r}
@@ -269,6 +309,20 @@ f4 %>% filter(is.na(thaw_depth))
 f4_dates %>% distinct(site_id, plot_id, fire_id, burn_unburn) 
 f4_dates %>% distinct(msrDoy, year, date)
 ```
+
+```{r}
+#Summarize missing data issues
+f4_missingSum = f4_dates %>% summarize(ct = n(),
+                       day = sum(is.na(day)),
+                       FireYear = sum(is.na(fire_year)),
+                       gtp = sum(gt_probe=="y"),
+                       hit_rock = sum(hit_rock=="y"), 
+                       thaw_depth = sum(is.na(thaw_depth)),
+                       NoPair = sum(is.na(paired))
+                       ) %>%
+  mutate(submitNm = "Diaz")
+```
+
 ## 5. Dielman
 ```{r}
 f5 <- read.csv(f[5], header = TRUE)
@@ -335,7 +389,21 @@ f5_dates %>% distinct(site_id, plot_id, fire_id, burn_unburn)
 f5_dates %>% distinct(msrDoy, year, date)
 ```
 
+```{r}
+#Summarize missing data issues
+f5_missingSum = f5_dates %>% summarize(ct = n(),
+                       day = sum(is.na(day)),
+                       FireYear = sum(is.na(fire_year)),
+                       gtp = sum(gt_probe=="y"),
+                       hit_rock = sum(hit_rock=="y"), 
+                       thaw_depth = sum(is.na(thaw_depth)),
+                       NoPair = sum(is.na(paired))
+                       ) %>%
+  mutate(submitNm = "Dieleman")
+```
+
 ## 6. Douglas
+
 ```{r}
 f6 <- read.csv(f[6], header = TRUE)
 f6
@@ -375,8 +443,22 @@ f6_dates %>% distinct(site_id, plot_id, fire_id, burn_unburn)
 f6_dates %>% distinct(msrDoy, year, date)
 ```
 
+```{r}
+#Summarize missing data issues
+f6_missingSum = f6_dates %>% summarize(ct = n(),
+                       day = sum(is.na(day)),
+                       FireYear = sum(is.na(fire_year)),
+                       gtp = sum(gt_probe=="y"),
+                       hit_rock = sum(hit_rock=="y"), 
+                       thaw_depth = sum(is.na(thaw_depth)),
+                       NoPair = sum(is.na(paired))
+                       ) %>%
+  mutate(submitNm = "Douglas")
+```
+
 
 ## 7. Frost
+
 ```{r}
 f7 <- read.csv(f[7], header = TRUE)
 f7
@@ -420,6 +502,19 @@ f7_dates = f7 %>%
 ```{r}
 f7_dates %>% distinct(site_id, plot_id, fire_id, burn_unburn) 
 f7_dates %>% distinct(msrDoy, year, date)
+```
+
+```{r}
+#Summarize missing data issues
+f7_missingSum = f7_dates %>% summarize(ct = n(),
+                       day = sum(is.na(day)),
+                       FireYear = sum(is.na(fire_year)),
+                       gtp = sum(gt_probe=="y"),
+                       hit_rock = sum(hit_rock=="y"), 
+                       thaw_depth = sum(is.na(thaw_depth)),
+                       NoPair = sum(is.na(paired))
+                       ) %>%
+  mutate(submitNm = "Frost")
 ```
 
 ## 8. Gaglioti
@@ -468,7 +563,21 @@ f8_dates %>% distinct(site_id, plot_id, fire_id, burn_unburn)
 f8_dates %>% distinct(msrDoy, year, date)
 ```
 
+```{r}
+#Summarize missing data issues
+f8_missingSum = f8_dates %>% summarize(ct = n(),
+                       day = sum(is.na(day)),
+                       FireYear = sum(is.na(fire_year)),
+                       gtp = sum(gt_probe=="y"),
+                       hit_rock = sum(hit_rock=="y"), 
+                       thaw_depth = sum(is.na(thaw_depth)),
+                       NoPair = sum(is.na(paired))
+                       ) %>%
+  mutate(submitNm = "Gaglioti")
+```
+
 ## 9. Holloway
+
 ```{r}
 f9 <- read.csv(f[9], header = TRUE) 
 f9
@@ -540,7 +649,21 @@ f9_dates %>% distinct(site_id, plot_id, fire_id, burn_unburn, pairUnb)
 f9_dates %>% distinct(msrDoy, year, date)
 ```
 
+```{r}
+#Summarize missing data issues
+f9_missingSum = f9_dates %>% summarize(ct = n(),
+                       day = sum(is.na(day)),
+                       FireYear = sum(is.na(fire_year)),
+                       gtp = sum(gt_probe=="y"),
+                       hit_rock = sum(hit_rock=="y"), 
+                       thaw_depth = sum(is.na(thaw_depth)),
+                       NoPair = sum(is.na(paired))
+                       ) %>%
+  mutate(submitNm = "Holloway")
+```
+
 ## 10. Loranty
+
 ```{r}
 f10 <- read.csv(f[10], header = TRUE)
 f10
@@ -573,8 +696,21 @@ f10_dates = f10 %>%
 f10_dates
 ```
 
+```{r}
+#Summarize missing data issues
+f10_missingSum = f10_dates %>% summarize(ct = n(),
+                       day = sum(is.na(day)),
+                       FireYear = sum(is.na(fire_year)),
+                       gtp = sum(gt_probe=="y"),
+                       hit_rock = sum(hit_rock=="y"), 
+                       thaw_depth = sum(is.na(thaw_depth)),
+                       NoPair = sum(is.na(paired))
+                       ) %>%
+  mutate(submitNm = "Loranty")
+```
 
 ## 11. Manies
+
 ```{r}
 f11 <- read.csv(f[11], header = TRUE)
 f11
@@ -623,7 +759,21 @@ f11_dates %>% distinct(site_id, plot_id, fire_id, burn_unburn)
 f11_dates %>% distinct(site_id, thaw_active, msrDoy, year, date)
 ```
 
+```{r}
+#Summarize missing data issues
+f11_missingSum = f11_dates %>% summarize(ct = n(),
+                       day = sum(is.na(day)),
+                       FireYear = sum(is.na(fire_year)),
+                       gtp = sum(gt_probe=="y"),
+                       hit_rock = sum(hit_rock=="y"), 
+                       thaw_depth = sum(is.na(thaw_depth)),
+                       NoPair = sum(is.na(paired))
+                       ) %>%
+  mutate(submitNm = "Manies")
+```
+
 ## 12. Natali
+
 ```{r}
 f12 <- read.csv(f[12], header = TRUE)
 f12
@@ -697,7 +847,21 @@ f12_dates %>% distinct(msrDoy, year, date)
 f12_dates %>% filter_all(any_vars(is.na(.))) 
 ```
 
+```{r}
+#Summarize missing data issues
+f12_missingSum = f12_dates %>% summarize(ct = n(),
+                       day = sum(is.na(day)),
+                       FireYear = sum(is.na(fire_year)),
+                       gtp = sum(gt_probe=="y"),
+                       hit_rock = sum(hit_rock=="y"), 
+                       thaw_depth = sum(is.na(thaw_depth)),
+                       NoPair = sum(is.na(paired))
+                       ) %>%
+  mutate(submitNm = "Natali")
+```
+
 ## 13. O'Donnell
+
 ```{r}
 f13 <- read.csv(f[13], header = TRUE)
 f13
@@ -747,7 +911,21 @@ f13_dates %>% distinct(msrDoy, year, date)
 f13_dates %>% distinct(site_id, thaw_active, msrDoy, year, date)
 ```
 
+```{r}
+#Summarize missing data issues
+f13_missingSum = f13_dates %>% summarize(ct = n(),
+                       day = sum(is.na(day)),
+                       FireYear = sum(is.na(fire_year)),
+                       gtp = sum(gt_probe=="y"),
+                       hit_rock = sum(hit_rock=="y"), 
+                       thaw_depth = sum(is.na(thaw_depth)),
+                       NoPair = sum(is.na(paired))
+                       ) %>%
+  mutate(submitNm = "O'Donnell")
+```
+
 ## 14. Olefeldt
+
 ```{r}
 f14 <- read.csv(f[14], header = TRUE)
 f14
@@ -805,7 +983,21 @@ f14_dates %>% distinct(msrDoy, year, date)
 f14_dates %>% filter(is.na(msrDoy))
 ```
 
+```{r}
+#Summarize missing data issues
+f14_missingSum = f14_dates %>% summarize(ct = n(),
+                       day = sum(is.na(day)),
+                       FireYear = sum(is.na(fire_year)),
+                       gtp = sum(gt_probe=="y"),
+                       hit_rock = sum(hit_rock=="y"), 
+                       thaw_depth = sum(is.na(thaw_depth)),
+                       NoPair = sum(is.na(paired))
+                       ) %>%
+  mutate(submitNm = "Olefeldt")
+```
+
 ## 15. Paulson
+
 ```{r}
 f15 <- read.csv(f[15], header = TRUE)
 f15
@@ -861,7 +1053,21 @@ f15_dates %>% distinct(site_id, plot_id, fire_id, burn_unburn)
 f15_dates %>% distinct(msrDoy, year, date)
 ```
 
+```{r}
+#Summarize missing data issues
+f15_missingSum = f15_dates %>% summarize(ct = n(),
+                       day = sum(is.na(day)),
+                       FireYear = sum(is.na(fire_year)),
+                       gtp = sum(gt_probe=="y"),
+                       hit_rock = sum(hit_rock=="y"), 
+                       thaw_depth = sum(is.na(thaw_depth)),
+                       NoPair = sum(is.na(paired))
+                       ) %>%
+  mutate(submitNm = "Paulson")
+```
+
 ## 16. Rocha
+
 ```{r}
 f16 <- read.csv(f[16], header = TRUE)
 f16
@@ -924,7 +1130,21 @@ f16_dates %>% distinct(site_id, plot_id, fire_id, burn_unburn)
 f16_dates %>% distinct(msrDoy, year, date)
 ```
 
+```{r}
+#Summarize missing data issues
+f16_missingSum = f16_dates %>% summarize(ct = n(),
+                       day = sum(is.na(day)),
+                       FireYear = sum(is.na(fire_year)),
+                       gtp = sum(gt_probe=="y"),
+                       hit_rock = sum(hit_rock=="y"), 
+                       thaw_depth = sum(is.na(thaw_depth)),
+                       NoPair = sum(is.na(paired))
+                       ) %>%
+  mutate(submitNm = "Rocha")
+```
+
 ## 17. Sizov
+
 ```{r}
 f17 <- read.csv(f[17], header = TRUE)
 f17
@@ -961,7 +1181,21 @@ f17_dates %>% distinct(site_id, plot_id, fire_id, burn_unburn)
 f17_dates %>% distinct(msrDoy, year, date)
 ```
 
+```{r}
+#Summarize missing data issues
+f17_missingSum = f17_dates %>% summarize(ct = n(),
+                       day = sum(is.na(day)),
+                       FireYear = sum(is.na(fire_year)),
+                       gtp = sum(gt_probe=="y"),
+                       hit_rock = sum(hit_rock=="y"), 
+                       thaw_depth = sum(is.na(thaw_depth)),
+                       NoPair = sum(is.na(paired))
+                       ) %>%
+  mutate(submitNm = "Sizov")
+```
+
 ## 18. Veraverbeke
+
 ```{r}
 f18 <- read.csv(f[18], header = TRUE)
 f18
@@ -999,7 +1233,7 @@ f18 %>% filter(is.na(thaw_depth))
                   ifelse(plot_id %in% c('YE014C',	'YE022C'), "r4",
                   ifelse(plot_id %in% c('YE006B', 'YE007B',	'YE013C'), "r5",
                   ifelse(plot_id %in% c('YE009B', 'YE010B', 'YE011B', 'YE012B', 'YE016C'), "r6", "r7"))))))) %>%
-    mutate(submitNm="Veraverbeke")
+    mutate(submitNm="Delcourt")
 )
 ```
 
@@ -1008,6 +1242,18 @@ f18_dates %>% distinct(site_id, plot_id, fire_id, burn_unburn)
 f18_dates %>% distinct(msrDoy, year, date)
 ```
 
+```{r}
+#Summarize missing data issues
+f18_missingSum = f18_dates %>% summarize(ct = n(),
+                       day = sum(is.na(day)),
+                       FireYear = sum(is.na(fire_year)),
+                       gtp = sum(gt_probe=="y"),
+                       hit_rock = sum(hit_rock=="y"), 
+                       thaw_depth = sum(is.na(thaw_depth)),
+                       NoPair = sum(is.na(paired))
+                       ) %>%
+  mutate(submitNm = "Delcourt")
+```
 
 # Match Data structure across dataframes 
 
@@ -1085,7 +1331,9 @@ Contributed data 52,468 rows
 ```{r}
 colnames(dataCube)
 ```
+
 ## Check Missing Day of month
+
 ```{r}
 ( nadoy = dataCube %>% filter(is.na(msrDoy)) )
 ```
@@ -1095,7 +1343,9 @@ unique(nadoy$submitNm)
 
 dataCube %>% filter(submitNm =="Dieleman")
 ```
+
 ## Check and fix factors
+
 ```{r}
 unique(dataCube$hitRock)
 unique(dataCube$gtProbe)
@@ -1113,8 +1363,24 @@ unique(dataCube$hitRock)
 unique(dataCube$gtProbe)
 ```
 
+## Summarize missing data
+
+```{r}
+missingDataSummary = dplyr::bind_rows(f1_missingSum, f2_missingSum, f3_missingSum, f4_missingSum, f5_missingSum, f6_missingSum, f7_missingSum, f8_missingSum, f9_missingSum, f10_missingSum, f11_missingSum, f12_missingSum, f13_missingSum, f14_missingSum, f15_missingSum, f16_missingSum, f17_missingSum, f18_missingSum)
+```
+
+```{r}
+missingDataSummary
+```
+
+```{r eval=FALSE, include=FALSE}
+write_csv(missingDataSummary, '../outputs/dataCube/PermafrostFireContributedDataMissingDataSummary.csv')
+```
+
 ## Save contributed data
+
 Contributed data 52,468 rows
+
 ```{r eval=FALSE, include=FALSE}
 write_csv(dataCube, '../outputs/dataCube/PermafrostFireContributedData.csv')
 ```

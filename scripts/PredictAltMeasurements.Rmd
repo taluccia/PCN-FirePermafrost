@@ -126,6 +126,13 @@ dataCombine %>% filter(if_any(predDepth, is.na))
 
 # Remove Infinite values
 ```{r}
+( pred_infinite = dataCombine %>% 
+    filter_at(vars(predDepth), all_vars(is.infinite(.))) %>%
+    group_by(submitNm) %>%
+    summarize(n= n())
+)
+```
+```{r}
 ( cleanDataCombine = dataCombine %>% 
     filter_at(vars(predDepth), all_vars(!is.infinite(.))) 
 )

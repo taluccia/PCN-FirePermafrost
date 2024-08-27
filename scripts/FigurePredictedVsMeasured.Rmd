@@ -362,6 +362,10 @@ set.seed(29)
 )
 
 ```
+4-8	lutose_2000	5	thaw	msrDepth	19.0
+4-8	lutose_2000	5	thaw	predDepth	63.0
+RT3	YKD	15	active	msrDepth	97.0
+RT3	YKD	15	active	predDepth	100.0
 
 ```{r}
 ( paired2 = sample %>% 

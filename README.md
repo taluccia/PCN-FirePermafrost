@@ -31,3 +31,6 @@
 ## Methods
 
 
+## Notes
+Notes:
+[Better colors for Mapping](https://www.esri.com/arcgis-blog/products/js-api-arcgis/mapping/better-colors-for-better-mapping/)

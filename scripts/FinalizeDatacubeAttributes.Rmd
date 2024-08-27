@@ -97,8 +97,19 @@ datacubePred1 %>% filter(if_any(tsf, is.na))
 )
 ```
 
+# Final Checks
+```{r}
+unique(sort(datacubePred2$lastNm))
+
+datacubePred2 %>% group_by(lastNm, submitNm) %>% summarize(count = n())
+```
+
+```{r}
+1903+739
+```
 
 ## Save FInal data cube
+
 ```{r}
 write_csv(datacubePred2, '../outputs/dataCube/PermafrostFireDatacubeFinal.csv')
 ```

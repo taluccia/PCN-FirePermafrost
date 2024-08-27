@@ -53,3 +53,30 @@ dplyr::select(OrderAuthor, nameManuscript, department, institution, city, postal
 ```{r}
 write_csv(aa, "../outputs/authorAffiliationOrganize.csv")
 ```
+
+# Contributions paragraph Sections
+
+```{r}
+credit = read_csv("../data/authorDetails/CRediT.csv")
+```
+
+```{r}
+( creditParagraph = credit %>% 
+  filter(Authorship != "declines") %>% 
+  select(Initials, First, Last, CRediT1:CRediT5) %>% 
+  pivot_longer(
+    cols = starts_with("CRediT"),
+    names_to = "credit_no",
+    values_to = "credit",
+    values_drop_na = TRUE) %>%
+  select(!credit_no) %>%
+  group_by(credit) %>%
+  mutate(groupId = cur_group_id()) %>%
+  dplyr::select(!c(First, Last)) %>%
+  summarize(ListIntials = paste(sort(unique(Initials)),collapse=", "))
+)
+```
+
+```{r}
+write_csv(creditParagraph, "../outputs/CRediTParagraph.csv")
+```
